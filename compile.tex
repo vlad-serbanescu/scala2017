@@ -1,65 +1,84 @@
-\section{Generation and Scheduling of Continuations}
-\label{comp}
+\section{Optimizations for the JVM}
+\label{optimizations}
+We investigate the performance impact of eliminating the large number of expensive threads in Java that are required to implement the cooperative scheduling model. Using this data-oriented approach for saving contexts we limit any application to the system's main memory size, but added to that we also obtain some other optimizations related to Java's features.
 
-When cooperative scheduling occurs, the continuation must be created and then scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation and scheduled accordingly. 
+\subsection{Demand-driven approach.}
+An important advantage of having a task assigned to each actor and a manually processed queue is that we can start and stop the task depending on the queue state. To avoid keeping the Main Task alive, we make it part of the functionality of sending a message or completing a future to notify the Main Task. This is done by any other actor who sends an invocation to an empty queue and subsequently the Main Task stops when there are no more enabled messages in the queue. This gives rise to some subtle synchronization points that will be detailed in Section~\ref{run}. An important observation to make here is the two scenarios that re-enable tasks. These release points may occur when actors fulfill a future and therefore we require the system to have a notification mechanism for actors with empty queues and newly enabled messages which we will detail in Section~\ref{run}. This requires maintaining a global hash table, mapping every future to the set of actors that are awaiting on its completion. When release points occur due to an internal state becoming valid, the Main Task is responsible for verifying the boolean condition before it may end (possibly because of no enabled messages), so no special notification is required in this case.
+
+%As ABS semantics do not allow actors to modify each other's internal state, we know that a release point that will validate a boolean condition based on a change of an actor's state can only occur during another task that is already executing on that actor. This release point will always occur before the running task ends and therefore the queue can never be empty as the released message will be available in the queue and no special notification will be required to resume the task assigned to the actor. 
+
+
+%\paragraph{Optimal usage of system threads.}
+%The approach of using one thread pool per system gives the user direct control over the number of live threads the application creates. Using the Executor interface in Java allows the user to choose the type of thread pool that manages the actors and set the maximum number of threads that are available. For example the user can limit the number of threads the application has to the number of cores that the machine provides and avoid context switches made by the JVM. This in turn means that the implementation has to provide fair usage of the threads with respect to the Main Tasks that run the actors, an issue which we will also touch upon in Section~\ref{run}. 
+
+\subsection{Eliminating busy waiting.}
+Cooperative scheduling through the "await" statements may suspend the current message run by the actor based on either a particular inner state or future requiring completion on a different actor. We discussed how the Main Task can start or stop based on release points, but how exactly does an actor verify that a release point has completed? Clearly, having a task continuously iterate through all suspended messages (busy-waiting) is inefficient. While we can permanently mark a message that needs a future to complete as available, by the nature of ABS, we cannot do that for a message which is released by a particular valid state, as its state can change again by the time it is run, so it always has to be verified before it is fetched. Instead, we assign this verification to the Main Task that iterates through the queue, and simply stop the task if no message is available. If the task does stop, it means that the actor is in a state in which it is unable to execute any of its suspended messages. Therefore, it requires another actor to either send a new invocation that will change its state or the system to send a notification about a future that may release some of its messages and re-enable the Main Task. 
+
+
+\subsection{Using JVM Garbage Collection}
+Using the approach explained so far in this section, the only extra references we need for the actors are the ones inside the global hash-table required for the notification mechanism for futures. Once the future is completed and notifications are sent, the key is deleted and the actor references become unreachable. Therefore we can leave the entire garbage collection process to the Java Runtime Environment as no other bookkeeping mechanisms are required.
+
+%When cooperative scheduling occurs, the continuation must be created and then scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation and scheduled accordingly. 
 
 %First, we assume no stack is present and try to address the first problem. Then we propose a solution to the stack issue in an orthogonal way. Theoretically, at runtime, you simply could make a pointer to the current “instruction pointer” and use it as the continuation. Of course, you need to store all the local variables. This would be a viable solution, if we could at runtime create a method whose entry point is the current (or more specifically, the next) instruction (or in terms of Java, the next bytecode instruction). This method should take as parameters, all the local variables of the currently executing method, including its parameters. Another solution is to do a preprocessing and statically create these methods.
 
-\subsection{Preprocessing continuations at compile time}
-Preprocessing of continuations can be done in both ABS or Java, but it is better to do in Java because then this code would apply also when using the proposed library directly in Java. The following explains how to do the preprocessing. The idea is that every await is replaced by a method call. For example:
+%\subsection{Preprocessing continuations at compile time}
+%Preprocessing of continuations can be done in both ABS or Java, but it is better to do in Java because then this code would apply also when using the proposed library directly in Java. The following explains how to do the preprocessing. The idea is that every await is replaced by a method call. For example:
+%
+%\begin{lstlisting}
+%void m1( Int p) {
+%	Boolean b;
+%	Int i;
+%	while (b) {
+%		await this.g?; // let say this is await number 1, and assume g is a class field
+%		i = 0;
+%}	}
+%\end{lstlisting}
+%
+%will translate to:
+%\begin{lstlisting}
+%void m1(Int p) {
+%	Boolean b;
+%	Int i;
+%	while (b) { 
+%		if (!g) {
+%			this ! await_1(i, b, p); 
+%			return;
+%		}
+%		i = 0;
+%}	}
+%\end{lstlisting}
+%
+%Then we have to generate the inner method "await\_1()" or in fact one of these methods per await statement. Generation can be done using the following rules:
+%
+%\begin{lstlisting}
+%Cont(S1;S2) = Cont(S2) IF await in S2
+%Cont(S1;S2) = Cont(S1);S2 IF await in S1
+%Cont(while(b){S}) = Cont(S); while(b){S} IF await in S
+%Cont(if(b) S1 else S2) = Cont(S1) IF await in S1
+%Cont(if(b) S1 else S2) = Cont(S2) IF await in S2
+%\end{lstlisting}
+%For the above example, we get the following:
+%
+%\begin{lstlisting}
+%Cont(m1) = Cont(while(b) { await g; i = 0 })
+%= Cont(await g; i = 0); while(b) {await g; i = 0 }
+%= { i = 0; while(b) {await g; i = 0 } }
+%void await_1(Int i, Boolean b, Int p) {
+%	i = 0; 
+%	while(b) {
+%		if (!g) {
+%			this ! await_1(i, b, p);
+%			return;
+%		}
+%		i = 0 ;
+%}	}
+%\end{lstlisting}
 
-\begin{lstlisting}
-void m1( Int p) {
-	Boolean b;
-	Int i;
-	while (b) {
-		await this.g?; // let say this is await number 1, and assume g is a class field
-		i = 0;
-}	}
-\end{lstlisting}
 
-will translate to:
-\begin{lstlisting}
-void m1(Int p) {
-	Boolean b;
-	Int i;
-	while (b) { 
-		if (!g) {
-			this ! await_1(i, b, p); 
-			return;
-		}
-		i = 0;
-}	}
-\end{lstlisting}
 
-Then we have to generate the inner method "await\_1()" or in fact one of these methods per await statement. Generation can be done using the following rules:
-
-\begin{lstlisting}
-Cont(S1;S2) = Cont(S2) IF await in S2
-Cont(S1;S2) = Cont(S1);S2 IF await in S1
-Cont(while(b){S}) = Cont(S); while(b){S} IF await in S
-Cont(if(b) S1 else S2) = Cont(S1) IF await in S1
-Cont(if(b) S1 else S2) = Cont(S2) IF await in S2
-\end{lstlisting}
-For the above example, we get the following:
-
-\begin{lstlisting}
-Cont(m1) = Cont(while(b) { await g; i = 0 })
-= Cont(await g; i = 0); while(b) {await g; i = 0 }
-= { i = 0; while(b) {await g; i = 0 } }
-void await_1(Int i, Boolean b, Int p) {
-	i = 0; 
-	while(b) {
-		if (!g) {
-			this ! await_1(i, b, p);
-			return;
-		}
-		i = 0 ;
-}	}
-\end{lstlisting}
-
-\subsection{Synchronous Calls}
-A fully asynchronous environment means to change a synchronous call \\ \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m();| \\ \lstinline| x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in the FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally, when the last message with that label is complete, then the call chain is complete and the next message will be selected arbitrarily.
+%\subsection{Synchronous Calls}
+%A fully asynchronous environment means to change a synchronous call \\ \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m();| \\ \lstinline| x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in the FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally, when the last message with that label is complete, then the call chain is complete and the next message will be selected arbitrarily.
 
 %\begin{itemize}
 %	\item we set a flag "isSyncCall" in the task that is calling "m" when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. 
