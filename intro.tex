@@ -1,31 +1,38 @@
 \section{Introduction}
 
-The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. Actors represent processes that execute in parallel and interact via asynchronous communication of messages. The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling and analysis of distributed systems, e.g., recent developments
-have focused on the modeling and analysis of Cloud applications~\cite{Albert}.
-ABS provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}.
+The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. 
+Actors represent processes that execute in parallel and interact via asynchronous communication of messages. 
+The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}.
+In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library that can be directly used from Scala and Java.
 
-In ABS a message specifies a call to one of the methods provided by the callee,
-as such it offers the ``programming to interfaces'' paradigm.
-ABS supports component based design because it features concurrent object groups which provide an additional structuring of objects into groups and supports compositional analysis. ABS further extends the Actor-based model with synchronous method calls as well as a high-level synchronization mechanism that allows actors to suspend the execution of the current message and schedule in a cooperative manner another
-queued message. In contrast, in the Actor-based modeling language Rebeca~\cite{Sirjani}, for example,
-messages are queued and processed in a run-to-completion mode of execution.
-Cooperative scheduling is a powerful means for the expression and analysis
-of fine-grained run-time dependencies between messages.
+% e.g., recent developments have focused on the modeling and analysis of Cloud applications~\cite{Albert}. 
 
 
-%Mahdi: 
-%{\bfseries
-%Maybe something about ABS being a modeling language? 
-%Or call it a programming/modeling paradigm rather than a ``language".
-%Then it makes more sense to say we make it a full-fledged programming language via FLI and integration with Java.
-%}
+In ABS, asynchronous messages are modeled as methods of an actor.
+Sending an asynchronous message will schedule the execution of the corresponding method in the callee, returning immediately a future that, upon completion, will hold the result of the method execution, or in case of errors, the thrown exception.
+This ``programming to interfaces'' paradigm enables static type checking of message passing at compile time.
+This is contrast to the typical approach in Scala where messages are allowed to have any type and thus are only checked at run-time whether the receiver can handle them.
 
-In this paper we introduce and evaluate a new run-time system in Java for the use of ABS as a full-fledged programming language which supports a Foreign Language Interface (FLI) to import Java libraries. As such our run-time system allows a component-based design in Java when following the ABS programming methodology.
+ABS further extends the Actor-based model with a high-level synchronization mechanism that allows actors to suspend in a cooperative manner the execution of the current message and start another queued message. 
+The continuation of the suspended message, which is automatically put back in the message queue, may also be assigned an enabling condition. 
+A typical use case is awaiting the completion of a future in the same method that has sent the corresponding message.
+This simplifies the programming logic by enabling the programmer to process the outcome of an asynchronous method call in the same place where it was sent (in a way similar to dealing with synchronous calls).
+Bear in mind that the continuation will be executed in the same actor thread thus (unlike the {\ttfamily onComplete} hooks in Scala that may run in a different thread) pose no threat to actor semantics.
+More details on syntax and behavior of ABS is presented in Section \ref{}. % section 2
+
+%In this paper we introduce and evaluate a new run-time system in Java for the use of ABS as a full-fledged programming language. 
+%As such our run-time system allows a component-based design in Java when following the ABS programming methodology.
 The main challenge is the development of an efficient and scalable source-to-source implementation of cooperative scheduling which, in the presence of synchronous calls, gives rise to the suspension of the entire call stack generated from a message.
 The continuation of the suspended message including the stack frame needs to be saved in order for execution to resume properly once the message is rescheduled.
 The basic feature of our proposed solution is the implementation of messages by means of lambda expressions (as provided by Java 8), i.e., the method call specified in a message
 is translated into a corresponding lambda expression~\cite{lambdas} which is passed and stored as
 an object of type Callable or Runnable (depending on whether it returns a result). 
+
+In this paper, we describe how we implemented ABS actors and cooperative scheduling using Java thread pools and executor services.  
+As elaborated in Section \ref{}, we took an approach with negligible performace penalties regarding message passing and cooperative scheduling. 
+We describe step by step how to support up to millions of messages,  actors, and suspended continuations.
+
+
 %This feature forms the basis of a run-time system which manages
 %the sending, storage and execution of the messages and their continuations
 %which arise because of the cooperative scheduling.
@@ -50,6 +57,11 @@ In the Haskell backend for ABS~\cite{Haskell}, for example, the use of continuat
 to queue a message as a process and dequeue it for execution and the C implementation of cooperative scheduling for the
 Encore language~\cite{Encore} uses low-level (e.g., machine code) operations for
 storing and retrieving call stacks from memory.
+
+In contrast, in the Actor-based modeling language Rebeca~\cite{Sirjani}, for example,
+messages are queued and processed in a run-to-completion mode of execution.
+Cooperative scheduling is a powerful means for the expression and analysis
+of fine-grained run-time dependencies between messages.
 
 The rest of this paper is organized as follows: In Section~\ref{lang} we give an overview of the main features that the target actor-based model has. Section~\ref{scheme} presents how our solution transitions from a process-oriented approach to a data-oriented approach. Section~\ref{comp} details how continuations are transformed into data and how this data is scheduled on the actors. Section~\ref{run} describes the main challenges of implementing the run-time system for the actor-based model. In Section~\ref{bench} we show the experimental evaluation of our solution followed by the conclusions drawn in Section~\ref{conc}.
 
