@@ -1,0 +1,20 @@
+\section{Conclusions}
+\label{conc}
+In this paper we proposed a Java library for efficiently implementing the cooperative scheduling behavior of ABS. We observed significant improvements due to the trade-off of saving continuations including the call stack as data in memory instead of native Java threads. 
+
+To provide support for the functional data types required by ABS we extended the backend to the Scala programming language together with this library. We want to study how well these models execute into the Java Runtime Environment compared to their direct implementations without the use of modeling languages. Furthermore having a portable JVM library gives us a basis for industrial adoption of the ABS language.  Finally this provides an opportunity to use ABS rich features in formal verification,  resource analysis and deadlock detection as well as extensions that support real-time and distributed programming, in a software development context. 
+
+%We have used the library in modeling real case studies such as the auctioning agent system presented by Dastani and Testerink \cite{bas16}  or applications that already use the formal description capabilities of ABS such as the work of Hahnle and Muschevici in validating railway systems\cite{railway}.
+
+\section{Acknowledgments}
+Partly funded by the EU project FP7-612985
+\textsc{UpScale}: From Inherent Concurrency to Massive Parallelism
+through Type-based Optimizations \\ (\texttt{http:/$\!$/www.upscale-project.eu}). We would like to thank the reviewers for the time and effort to provide a critical and constructive review to this paper.
+%We have a java library
+%We have already benchmarked overhead, but we want to use it for real case studies auctioning and incremental evaluation of railway systems
+%Promising candidate fo a basis for industrial adoption of the ABS language.
+%Advantage 
+%ABS is a rich language with this backend because of the formal analysis, resource analysis and deadlock detection.
+%Fromally defined language which provides the use of FA. 
+%Extensions for real-time programming and distributed programming.  
+%Scala backend for ABS have a full implementation of the functional data types (auctioning system)

@@ -1,0 +1,79 @@
+\section{Runtime Behaviour}
+\label{run}
+The implementation of the full data-oriented scheme is done through a Java library which contains a set of classes and interfaces that have a direct mapping to the ABS language concepts described in Section~\ref{lang}. The library provides an implementation of cooperative scheduling behavior, the suspension and release mechanisms while respecting the logic of synchronous calls. The library provides the solution and the optimizations discussed in Section~\ref{scheme} using the preprocessed continuations generated as detailed in Section~\ref{comp}. The library can be obtained as a maven project and is available online~\cite{library}.
+
+\subsection{Deployment Component}
+ABS uses the concept of \textbf{Deployment Component} to describe a system or a machine on which actors run. Therefore in our library we use this class to manage the two elements that the solution requires at the system level. The first is the system executor which currently in the library is a \textit{newFixedThreadPool} singleton \textit{ExecutorService} initialized with a fixed number of threads equal to the number of cores in the system. An actor may start a new Main Task by simply calling the static method \lstinline|submit(new MainTask())| offered by the Deployment Component. Inside the class there is support to safely call \lstinline|shutdown()| when all the actors in the application have completed execution. The second element is the notification mechanism together with a \textit{ConcurrentHashMap} that contains mappings of futures that hold release points on actors in the system. Actors that complete a certain future can call the static method \lstinline|releaseAll(f)| to notify actors that contain messages suspended on that particular future. 
+
+%A problem that can arise when there are more actors than available threads in the system's executor, some actors may keep processing one message after the other from its queue, and thus keeping the thread it is running on, while some other actors are starving, i.e., not being assigned to any thread.
+
+%\subsection{Suspension and Release Points}
+%To implement cooperative scheduling our library provides abstractions for guards that control suspension and release points. The are supported through the abstract class \textbf{Guard} and its subclasses \textbf{FutureGuard}, \textbf{PureExpressionGuard} and \textbf{ConjunctionGuard} that describe the conditions on which an actor's message can await: either a future, a particular valid expression or a group of these conditions respectively. 
+
+\subsection{Actor Implementation}
+The library offers an interface \textbf{Actor} containing several methods for implementing the behavior of synchronous (\textit{sendSync}), asynchronous (\textit{send}) method calls and await statements (\textit{await}) from ABS. The library currently supports an implementation of this interface called \textbf{LocalActor} for actors running on the same machine. Inside this class there is a \textit{messageQueue} defined which holds all the invocations (synchronous or asynchronous) that have been submitted to the actor as tasks. The implementation defines an inner class \textit{MainTask} which is a Java Runnable that corresponds to the task responsible for taking messages from the queue and running them. When the queue is empty, we do not want to make this task busy-wait until a message arrives, and so, upon insertion of a new message into the queue, there is a check whether such a task exists already. This, however, requires some careful synchronization. For every actor, we keep a local atomic boolean flag \textit{mainTaskIsRunning}. A first approach looks like in Listing~\ref{basicsync}:  \\ \\
+
+\begin{lstlisting}[float, caption= Basic Synchronization for the Demand-Driven Approach, label=basicsync]
+	// inside the task
+	class MainTask implements Runnable{
+		public void run() ({
+				// iterate through queue and take one message and run it
+			mainTaskIsRunning.set(false);
+	}	}
+	
+	// when inserting a new message
+	messageQueue.add(m);
+	if (!mainTaskIsRunning.compareAndSet(false, true)) {
+		DeploymentComponent.submit(new MainTask())
+	}
+\end{lstlisting}
+\begin{lstlisting}[caption= Complete Synchronization for the Demand-Driven Approach, label=completesync]
+private boolean takeOrDie() {
+	synchronized (mainTaskIsRunning) {
+		
+		// iterate through queue and take one ready message 
+		// if it exists set the next message for the main task and then
+		return true;
+		
+		//if the queue if empty or no message is able to run
+		mainTaskIsRunning.set(false);
+		return false;
+}	}
+private boolean notRunningThenStart() {
+	synchronized (mainTaskIsRunning) {
+		return mainTaskIsRunning.compareAndSet(false, true);
+}	}
+
+// inside the task
+class MainTask implements Runnable{
+	
+	public void run() {
+	while (takeOrDie())
+		// proceed to take the next message message and run it	 
+	}	
+}
+
+// when inserting a new message
+messageQueue.add(m);
+if (notRunningThenStart()) {
+	DeploymentComponent.submit(new MainTask());
+}
+\end{lstlisting}
+
+The problem with the code in Listing~\ref{basicsync} is that the check of the queue for emptiness and setting the flag to "false" is not atomic, and in between these two statements, a new message may be inserted into the queue without spawning a new Main Task. To remedy this, in Listing~\ref{completesync}, we introduce a new method that can check the queue for emptiness and set the flag to "false" in a critical section, for example inside a "synchronized" block using the \textit{messageQueue} or \textit{mainTaskIsRunning} as the lock. Additionally, either the insertion into the \textit{messageQueue} or \textit{compareAndSet} of \textit{mainTaskIsRunning} should also use the same lock.  Another problem with this approach above is that, when there are more actors than available threads, there is no fairness policy when assigning a thread to an actor. To remedy this, we could change the while loop to an if statement like in Listing~\ref{fair}: 
+\begin{lstlisting}[caption= Fairness Between Actors, label=fair]
+class MainTask implements Runnable{
+	public void run() {
+	
+		if (!takeOrDie())
+			return;
+		// proceed to take the next message message and run it	 
+		DeploymentComponent.submit(this);
+	}	
+}
+\end{lstlisting}
+
+
+
+
+

@@ -1,0 +1,154 @@
+\section{Generation and Scheduling of Continuations}
+\label{comp}
+
+When cooperative scheduling occurs, the continuation must be created and then scheduled as a new task. There are two problems with that. Firstly, the continuation is not just another method, but part of it, and thus cannot just be turned into a Runnable, so that it can be enqueued. Secondly, in presence of synchronous calls, the whole stack needs to be part of the continuation and scheduled accordingly. 
+
+%First, we assume no stack is present and try to address the first problem. Then we propose a solution to the stack issue in an orthogonal way. Theoretically, at runtime, you simply could make a pointer to the current “instruction pointer” and use it as the continuation. Of course, you need to store all the local variables. This would be a viable solution, if we could at runtime create a method whose entry point is the current (or more specifically, the next) instruction (or in terms of Java, the next bytecode instruction). This method should take as parameters, all the local variables of the currently executing method, including its parameters. Another solution is to do a preprocessing and statically create these methods.
+
+\subsection{Preprocessing continuations at compile time}
+Preprocessing of continuations can be done in both ABS or Java, but it is better to do in Java because then this code would apply also when using the proposed library directly in Java. The following explains how to do the preprocessing. The idea is that every await is replaced by a method call. For example:
+
+\begin{lstlisting}
+void m1( Int p) {
+	Boolean b;
+	Int i;
+	while (b) {
+		await this.g?; // let say this is await number 1, and assume g is a class field
+		i = 0;
+}	}
+\end{lstlisting}
+
+will translate to:
+\begin{lstlisting}
+void m1(Int p) {
+	Boolean b;
+	Int i;
+	while (b) { 
+		if (!g) {
+			this ! await_1(i, b, p); 
+			return;
+		}
+		i = 0;
+}	}
+\end{lstlisting}
+
+Then we have to generate the inner method "await\_1()" or in fact one of these methods per await statement. Generation can be done using the following rules:
+
+\begin{lstlisting}
+Cont(S1;S2) = Cont(S2) IF await in S2
+Cont(S1;S2) = Cont(S1);S2 IF await in S1
+Cont(while(b){S}) = Cont(S); while(b){S} IF await in S
+Cont(if(b) S1 else S2) = Cont(S1) IF await in S1
+Cont(if(b) S1 else S2) = Cont(S2) IF await in S2
+\end{lstlisting}
+For the above example, we get the following:
+
+\begin{lstlisting}
+Cont(m1) = Cont(while(b) { await g; i = 0 })
+= Cont(await g; i = 0); while(b) {await g; i = 0 }
+= { i = 0; while(b) {await g; i = 0 } }
+void await_1(Int i, Boolean b, Int p) {
+	i = 0; 
+	while(b) {
+		if (!g) {
+			this ! await_1(i, b, p);
+			return;
+		}
+		i = 0 ;
+}	}
+\end{lstlisting}
+
+\subsection{Synchronous Calls}
+A fully asynchronous environment means to change a synchronous call \\ \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m();| \\ \lstinline| x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in the FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally, when the last message with that label is complete, then the call chain is complete and the next message will be selected arbitrarily.
+
+%\begin{itemize}
+%	\item we set a flag "isSyncCall" in the task that is calling "m" when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. 
+%	\item Assuming that there is no "message overtaking" we know that messages that are part of a synchronous call chain arrive in the Actor's queue in a FIFO order. Therefore we can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. Therefore when the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally when the last message with that label is complete, the next message will be taken arbitrarily.
+%\end{itemize}
+
+%This change regards the implementation of the Main Task. That task will need another flag "isSynchCall" and when that flag is true, it will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. 
+
+%Completion of futures
+
+%The problem is when an actor has no enabled messages, it may only be reenabled when a future it is waiting on completes. But how should the actor be awakened in this case? The answer is by the actor who completes the future.
+
+%There must be a global hash table, mapping every future to the set of actors that are awaiting on its completion. When a future completes (basically when a method finishes), the current actor looks up this future in this hash table, and sends a special `enable` method to all awaiting actors, and this method takes the future as the parameter. On the other side, every actor puts the messages awaiting a future into a special queue of suspended messages. The `enable` method takes the message waiting in this future and puts them to the default queue of enabled messages. Note that the messages awaiting on boolean conditions, are in separate queues as we discussed in the previous post.
+
+%- Mahdi's blog post 
+
+%Conceptually an actor has one thread of execution, which means it can run only one method at a time. Practically, however, allocating a real thread for each actor is highly expensive. Very roughly speaking, an executor service in Java provides a queue of tasks and an efficient way of running those tasks on a few threads. Due to the optimizations provided by Java implementations, an executor in principle is the best way to scale to many concurrent tasks. We use the terms executor and thread-pool interchangeably. There are two possibilities in how to use executors when modeling actors.
+
+%One Task Per Message
+
+%Conceptually, one message handler (or method) may be seen as the unit of execution — forgetting about release points and awaits for now. By submitting one task to the executor upon receiving a message, we in effect also delegate the queueing of the messages over to the executor. This is good as we may assume executors have optimized implementations for handling queues. The disadvantage here is that we will need a lock per actor that must be checked by every message handler upon start, and freed upon completion. We can reduce the number of lock-based synchronization by handling actor queues manually, as described below.
+
+%One Task Per Actor
+
+%From a different perspective, we may see an actor itself as a unit of execution, as in conceptually has exactly one thread. This justifies having one task in the executor thread pool per actor. This means that we must handle the message queue of each actor separately. The task corresponding to an actor is then responsible for taking messages one by one from the queue and running them. This removes the requirement to synchronize every message handler, but it comes at the cost of having to manage message queues manually.
+
+%There is a problem when the queue is empty. Since we do not want to make this task busy-wait until a message arrives, an idea would be to check upon insertion of a new message into the queue whether such a task exists already. This again, however, requires some careful synchronization, but we expect that this is less severe than the previous case (although we cannot prove it). To do so, for every actor, we keep a local atomic boolean flag `running`. A first approach looks like this:
+
+%// inside the task
+%Runnable task = () => (
+%while (!q.isEmpty()) {
+%	// take one message and run it
+%} 
+%running.set(false);
+%);
+%// when inserting a new message
+%q.insert(m);
+%if (!running.getAndSet(true)) {
+%	executor.submit(task);
+%}
+%The problem with the above code is that the check of the queue for emptiness and setting the flag to `false` is not atomic, and in between these two statements, a new message may be inserted into the queue without spawning a new task. To remedy this, we need to introduce a new method that can check the queue for emptiness and set the flag to `false` in a critical section, for example inside a `synchronized` block using the `q` or `running` as the lock. Additionally, either the insertion into the `q` or getAndSet of `running` should also use the same lock obviously.
+%
+%boolean isQueueEmptyAndReset(q, running) {
+%	synchronized (running) {
+%		if (q.isEmpty()) {
+%			running.set(false);
+%			return true;
+%		} 
+%		return false; 
+%	}
+%}
+%boolean getAndSetSync(running) {
+%	synchronized (running) {
+%		return running.getAndSet(true);
+%	}
+%}
+%
+%// inside the task
+%Runnable task = () => (
+%while (!isQueueEmptyAndReset(q, running)) {
+%	// take one message and run it
+%} 
+%);
+%// when inserting a new message
+%q.insert(m);
+%if (!getAndSetSync(running)) {
+%	executor.submit(task);
+%}
+%Additionally, the flexibility on controlling the queues may even be useful. We can indeed make use of this for handling release points and await statements. We suggest to use various queues for every actor, each coupled with a predicate, for example checking a boolean or completion of a future, and then at every scheduling point, one message from one of the enabled queues is taken, and executed. This is obviously assuming that when releasing the processor (e.g., via `await`) the continuation is clearly a runnable/callable that can be put into the queue.
+%
+%Fairness
+%
+%Another problem with the approach above is that (when there are more actors than available threads), some actors may keep processing one message after the other from its queue, and thus keeping the thread it is running on, while some other actors are starving, i.e., not being assigned to any thread. To remedy this, we could change the while loop to an if statement like this:
+%
+%// inside the task
+%Runnable task = () => (
+%// take one message and run it, and then ...
+%if (!isQueueEmptyAndReset(q, running)) {
+%	executor.submit(this);
+%} 
+%);
+%// when inserting a new message
+%q.insert(m);
+%if (!getAndSetSync(running)) {
+%	executor.submit(task);
+%}
+
+
+
+
+
+%- formal explanation for creating continuations.
