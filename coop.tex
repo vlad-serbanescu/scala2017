@@ -3,7 +3,7 @@
 %-sequence diagram of what happens in an actor during synchronous and asynchronous method calls.
 
 %\subsection{}
-In this section we present how the Java language is used as a backend for ABS and investigate the evolution of the scheme used to implement cooperative scheduling in the Java Runtime environment.  from a very simple approach to using several libraries and features that the latest version of Java provides. The first feature we will use is the Executor interface~\cite{execserv} that facilitates parallel programming in Java. The objects that implement this interface provide a queue of tasks and an efficient way of running those tasks on multiple threads. Throughout this section we will use the terms executor and thread pool interchangeably to refer to this feature. The second notion discussed in our solution was introduced starting with Java 8 and it is the construct for a lambda expression~\cite{lambdas}. This allows us to model a method call as a Runnable or Callable and we will refer to this model as a \textbf{task}. We will look at each solution in terms of four Actor features:
+In this section we present how the Scala language is used as a backend for ABS and investigate the evolution of the scheme used to implement cooperative scheduling in the Java Runtime environment. We start  from a very trivial approach to using several libraries and features that the latest version of Java SDK provides. The first feature we will use is the Executor interface~\cite{execserv} that facilitates thread programming. The objects that implement this interface provide a queue of tasks and an efficient way of running those tasks on multiple threads. Throughout this section we will use the terms executor and thread pool interchangeably to refer to this feature. The second notion discussed in our solution was introduced starting with the Java 8 version, and it is the construct for a lambda expression~\cite{lambdas}. This allows us to model a method call as a Runnable or Callable and we will refer to this model as a \textbf{task}. We will look at each solution in terms of four Actor features:
 
 \begin{itemize}
 	\item Creation of the actor itself;
@@ -19,13 +19,13 @@ In this section we present how the Java language is used as a backend for ABS an
 %\subsection{Modeling Language Concepts in the JVM}
 
 \subsection{Every asynchronous call is a thread and each actor has a lock.}
-The trivial straightforward approach for implementing cooperative scheduling in Java is for an asynchronous call to generate a new native thread with its own stack and context. We would then model each actor as an object with a lock for which threads compete. The disadvantage here is that this lock-per-actor must be checked by every message handler upon start, and freed upon completion. Whenever an await statement occurs the thread would be suspended by the JVM's normal behavior. When the release condition is enabled, a suspended thread would become available and in turn compete with the other threads in order to execute on the actor. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the number of live native threads. Figure~\ref{tp} provides an illustration of this base \textit{process-oriented} approach. Here the idea is that the threads in the circle belong to one actor, thus sharing a lock(the green thread holds the lock, while the red ones are waiting to acquire it). The four Actor features are implemented as follows:
+The trivial straightforward approach for implementing cooperative scheduling in the library is for an asynchronous call to generate a new native thread with its own stack and context. We would then model each actor as an object with a lock for which threads compete. The disadvantage here is that this lock-per-actor must be checked by every message handler upon start, and freed upon completion. Whenever an await statement occurs the thread would be suspended by the JVM's normal behavior. When the release condition is enabled, a suspended thread would become available and in turn compete with the other threads in order to execute on the actor. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the number of live native threads. Figure~\ref{tp} provides an illustration of this base \textit{process-oriented} approach. Here the idea is that the threads in the circle belong to one actor, thus sharing a lock(the green thread holds the lock, while the red ones are waiting to acquire it). The four Actor features are implemented as follows:
 
 \begin{itemize}
 	\item The actor is initialized as an object with a lock;
 	\item Asynchronous calls are created as new threads that compete for the lock
-	\item Suspension of a call simply suspends the thread;
-	\item The call stack of a synchronous call is saved in the suspended thread
+	\item Suspension of a call  suspends the thread;
+	\item The call stack of a synchronous call is saved in the suspended thread.
 \end{itemize}
 
 
@@ -33,13 +33,13 @@ The trivial straightforward approach for implementing cooperative scheduling in 
 	\centering
 	\begin{minipage}{.47\textwidth}
 		\centering
-		\includegraphics[scale=0.74]{mt.png}
+		\includegraphics[scale=0.6]{mt.png}
 		\caption{Basic process-oriented approach}
 		\label{tp}
 	\end{minipage}
 	\begin{minipage}{.52\textwidth}
 		\centering
-		\includegraphics[scale=0.75]{atp.png}
+		\includegraphics[scale=0.6]{atp.png}
 		\caption{Actor-as-executor approach}
 		\label{atp}	
 	\end{minipage}
@@ -50,9 +50,9 @@ To reduce the number of live threads in an application, we can model each invoca
 
 \begin{itemize}
 	\item The actor is initialized as an object with a lock and a thread pool;
-	\item Asynchronous calls are created as new threads that compete for the lock;
-	\item Suspension of a call simply suspends the thread;
-	\item The call stack of a synchronous call is saved in the suspended thread;
+	\item Asynchronous calls are created as lambda expressions and assigned new threads that compete for the lock once they start;
+	\item Suspension of a call suspends the thread;
+	\item The call stack of a synchronous call is still saved in the suspended thread.
 \end{itemize}
 
 
@@ -70,7 +70,7 @@ In the previous two approaches we modeled the concept of an actor being restrict
 \par When cooperative scheduling occurs, the executing task of an actor will be suspended and therefore still live in the system as a thread so the application's live threads will be equal to the number of "await" statements in the program. The system's executor can dynamically adjust the number of available threads to run subsequent available tasks, but the application will then still be limited by the maximum number of suspended threads that can exist in the main memory. Furthermore, we still require a lock to ensure that, upon release, the suspended thread will compete with the Main Task associated to the actor from which it originated. This design is presented in Figure~\ref{stp} and it is important to observe the migration of messages into memory and that the red threads are only tasks that have been suspended by an "await". We observe the following changes in the four actor features:
 
 \begin{itemize}
-	\item The actor is initialized as an object with a lock, an explicit queue and an implementation of the \textbf{Main Task};
+	\item The actor is initialized as an object with a lock for threads that will be suspended by \texttt{await}, an explicit queue and an implementation of the \textbf{Main Task};
 	\item Asynchronous calls are created as new tasks that will be run by the \textbf{Main Task} and will compete for the lock only with suspended tasks;
 	\item Suspension of a call restarts the \textbf{Main Task} to iterate the actor's queue and parks the current task as a thread;
 	\item The call stack of a synchronous call is still saved in the suspended thread.
@@ -90,7 +90,7 @@ In the previous two approaches we modeled the concept of an actor being restrict
 \end{figure}
 
 \subsection{Fully asynchronous environment.}
-In the absence of synchronous calls, to eliminate the problem of having live threads when cooperative scheduling occurs, we can also use lambda expressions to turn the continuation of an await statement (which is determined by its lexical scope) into an internal method call and pass its current state as parameters to this method. Essentially what we do is allocate memory for the continuation on the heap, instead of holding a stack and context for it. We will benchmark this trade-off between the memory footprint of a native thread and the customized encoding of a thread state in memory. As there are no more suspended threads in the system to compete with the actor's Main Task, we can eliminate the lock per actor. Finally, let's consider the example in Listing~\ref{ex}. In this case the continuation consists of both the lexical scope of the release statement that is followed by the a complete synchronous call chain that has been generated(i.e. $C(m_2);C(m_1)$). The four features of the Actor are as follows:
+In the absence of synchronous calls, to eliminate the problem of having live threads when cooperative scheduling occurs, we can also use lambda expressions to turn the continuation of an await statement (which is determined by its lexical scope) into an internal method call and pass its current state as parameters to this method. Essentially what we do is allocate memory for the continuation on the heap, instead of holding a stack and context for it. We will benchmark this trade-off between the memory footprint of a native thread and the customized encoding of a thread state in memory. As there are no more suspended threads in the system to compete with the actor's Main Task, we can eliminate the lock per actor. The four features of the Actor are as follows:
 
 \begin{itemize}
 	\item The actor is initialized as an object with an explicit queue and an implementation of the of the \textbf{Main Task}, but without a lock;
@@ -108,15 +108,15 @@ In the absence of synchronous calls, to eliminate the problem of having live thr
 
 \paragraph{Synchronous calls context.}
 
-In the presence of synchronous calls, the only problem that remains is how to save this call stack without degrading performance? To do this we can try to alter the bytecode to resume execution at runtime from a particular point, but we want our approach to be independent of the runtime and be extensible to other programming languages. Therefore we try to approach the problem differently; if we can turn a continuation, that does not originate from a stack of calls, into a task, is it possible to extend this to synchronous calls as well? We know that this issue arises when methods that contain an "await" statement are called synchronously, but at compile time we can easily identify all of these occurrences from the ABS code. We can simply mark them at compile time and transform them into asynchronous calls followed by an "await" statement on the future generated from the call. Now we can use the same approach for translating these continuations into tasks using lambda expressions and thus eliminating any suspended threads in the system. The final model of our solution is presented in Figure~\ref{sol}. The details of how to construct these continuations and schedule them are presented in Section~\ref{comp}. 
-\par A fully asynchronous environment means to change a synchronous call \\ \lstinline|x = this.m();| into an asynchronous call plus an await like \lstinline|f = this!m();| \\ \lstinline| x = await f?;|. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in the FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally, when the last message with that label is complete, then the call chain is complete and the next message will be selected arbitrarily.
-
+In the presence of synchronous calls, the problem that remains is how to save this call stack without degrading performance? To do this we can try to alter the bytecode to resume execution at runtime from a particular point, but we want our approach to be independent of the runtime and be extensible to other programming languages. Therefore we try to approach the problem differently; if we can turn a continuation, that does not originate from a stack of calls, into a task, is it possible to extend this to synchronous calls as well? We know that this issue arises when methods that contain an "await" statement are called synchronously like the example in Listing~\ref{absex}. When the \texttt{await f?} is encountered,  the continuation consists of both the lexical scope of the release statement that is followed by the a complete synchronous call chain that has been generated(i.e. $C(M_1)$ in Figure~\ref{sol}). At compile time, when translating source-to-source from ABS to Scala, we can identify all of these occurrences from the ABS code. We can mark them and transform them into asynchronous calls followed by an "await" statement on the future generated from the call. Now we can use the same approach for translating these continuations into tasks using lambda expressions and thus eliminating any suspended threads in the system.  The final model of our solution is presented in Figure~\ref{sol}. 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.47]{solution.png}
 	\caption{Full data-oriented approach}
 	\label{sol}
 \end{figure}
+
+\par A fully asynchronous environment means to change a synchronous call \texttt{x = this.m();} into an asynchronous call plus an await like \texttt{f = this!m();  x = await f?;}. There are two problems here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by changing the non-deterministic behavior of the Main Task. There are two constrains that we have to impose to preserve the chain of synchronous calls. First, we set a flag "isSyncCall" in the task that is calling "m" and when that flag is true, the Main Task will immediately execute the message that is to be enqueued instead of taking an arbitrary one from the queue. Second, assuming that there is no "message overtaking", the messages that are part of a synchronous call chain arrive in the Actor's queue in the FIFO order. We can label each call chain with a number "syncContext" and all messages part of that call chain will have this number. When the Main Task completes a message labeled with a particular number it will take from the queue the next available message with the same label and execute it. Finally, when the last message with that label is complete, then the call chain is complete and the next message will be selected arbitrarily.
 
 %\subsection{Optimizations for the JVM}
 %\label{optimizations}
