@@ -104,13 +104,13 @@
 %% extraction tools.
 
 %% Author with single affiliation.
-\author{Vlad Serbanescu1}
+\author{Vlad Serbanescu}
 \authornote{with author1 note}          %% \authornote is optional;
                                         %% can be repeated if necessary
 \orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
 \affiliation{
   \position{PhD Student}
-  \department{Department1}              %% \department is recommended
+  \department{Formal Methods}              %% \department is recommended
   \institution{Centrum Wiskunde \& Informatica}            %% \institution is required
   \streetaddress{Science Park 123}
   \city{Amsterdam}
@@ -121,32 +121,37 @@
 \email{vlad.serbanescu@cwi.nl}          %% \email is recommended
 
 %% Author with two affiliations and emails.
-\author{First2 Last2}
+\author{Frank de Boer}
 \authornote{with author2 note}          %% \authornote is optional;
                                         %% can be repeated if necessary
 \orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
 \affiliation{
-  \position{Position2a}
-  \department{Department2a}             %% \department is recommended
-  \institution{Institution2a}           %% \institution is required
-  \streetaddress{Street2a Address2a}
-  \city{City2a}
-  \state{State2a}
-  \postcode{Post-Code2a}
-  \country{Country2a}
+  \position{Professor}
+  \department{Formal Methods}              %% \department is recommended
+  \institution{Centrum Wiskunde \& Informatica}            %% \institution is required
+  \streetaddress{Science Park 123}
+  \city{Amsterdam}
+  \state{State1}
+  \postcode{Post-Code1}
+  \country{Netherlands}
 }
-\email{first2.last2@inst2a.com}         %% \email is recommended
+\email{frank.s.de.boer@cwi.nl}         %% \email is recommended
+
+
+\author{Mahdi Jaghouri}
+\authornote{with author1 note}          %% \authornote is optional;
+%% can be repeated if necessary
+\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
 \affiliation{
-  \position{Position2b}
-  \department{Department2b}             %% \department is recommended
-  \institution{Institution2b}           %% \institution is required
-  \streetaddress{Street3b Address2b}
-  \city{City2b}
-  \state{State2b}
-  \postcode{Post-Code2b}
-  \country{Country2b}
+  \department{Formal Methods}              %% \department is recommended
+  \institution{Centrum Wiskunde \& Informatica}            %% \institution is required
+  \streetaddress{Science Park 123}
+  \city{Amsterdam}
+  \state{State1}
+  \postcode{Post-Code1}
+  \country{Netherlands}
 }
-\email{first2.last2@inst2b.org}         %% \email is recommended
+\email{jaghouri@cwi.nl}         %% \email is recommended
 
 
 %% Paper note
@@ -170,7 +175,7 @@ with  a high-level synchronization mechanism which allows actors to suspend the
 execution of the current message and schedule in a cooperative manner another
 queued message.  This  extension  is a powerful means for the expression and analysis
 of fine-grained run-time dependencies between messages.
-In this paper we introduce  and evaluate a new run-time system in Java for  the use of ABS as a full-fledged programming language.
+In this paper we introduce  and evaluate a new library in Scala for  the use of ABS as a full-fledged programming language.
 The main challenge is the development of an efficient and scalable implementation of cooperative scheduling.
 By means of a typical benchmark we evaluate our proposed solution and compare it
 to other thread-based implementations of cooperative scheduling \ldots.
