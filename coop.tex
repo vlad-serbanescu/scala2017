@@ -33,13 +33,13 @@ The trivial straightforward approach for implementing cooperative scheduling in 
 	\centering
 	\begin{minipage}{.47\textwidth}
 		\centering
-		\includegraphics[scale=0.6]{mt.png}
+		\includegraphics[scale=0.4]{mt.png}
 		\caption{Basic process-oriented approach}
 		\label{tp}
 	\end{minipage}
 	\begin{minipage}{.52\textwidth}
 		\centering
-		\includegraphics[scale=0.6]{atp.png}
+		\includegraphics[scale=0.45]{atp.png}
 		\caption{Actor-as-executor approach}
 		\label{atp}	
 	\end{minipage}
@@ -83,7 +83,7 @@ In the previous two approaches we modeled the concept of an actor being restrict
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.51]{stp.png}
+	\includegraphics[scale=0.45]{stp.png}
 	\caption{System as a thread pool}
 	\label{stp}
 	
@@ -111,7 +111,7 @@ In the absence of synchronous calls, to eliminate the problem of having live thr
 In the presence of synchronous calls, the problem that remains is how to save this call stack without degrading performance? To do this we can try to alter the bytecode to resume execution at runtime from a particular point, but we want our approach to be independent of the runtime and be extensible to other programming languages. Therefore we try to approach the problem differently; if we can turn a continuation, that does not originate from a stack of calls, into a task, is it possible to extend this to synchronous calls as well? We know that this issue arises when methods that contain an "await" statement are called synchronously like the example in Listing~\ref{absex}. When the \texttt{await f?} is encountered,  the continuation consists of both the lexical scope of the release statement that is followed by the a complete synchronous call chain that has been generated(i.e. $C(M_1)$ in Figure~\ref{sol}). At compile time, when translating source-to-source from ABS to Scala, we can identify all of these occurrences from the ABS code. We can mark them and transform them into asynchronous calls followed by an "await" statement on the future generated from the call. Now we can use the same approach for translating these continuations into tasks using lambda expressions and thus eliminating any suspended threads in the system.  The final model of our solution is presented in Figure~\ref{sol}. 
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.47]{solution.png}
+	\includegraphics[scale=0.45]{solution.png}
 	\caption{Full data-oriented approach}
 	\label{sol}
 \end{figure}

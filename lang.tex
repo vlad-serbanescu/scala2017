@@ -85,18 +85,18 @@ class A() implements Ainterface{
 	}	}
 
 { // Main block:
-Int i = 0;	
-Ainterface master = new A ( );
-List<Fut<Int>> futures = Nil;	
-while( i < 500){		
-Fut<Int> f = master ! recursive_m (5, i);
-futures = Cons( f, futures );
-i = i + 1 ;
-}
-while ( futures != Nil ){
-Fut<Int> f1 = head(futures);
-futures = tail(futures);
-Int r = f1.get;
+	Int i = 0;	
+	Ainterface master = new A ( );
+	List<Fut<Int>> futures = Nil;	
+	while( i < 2000){		
+		Fut<Int> f = master ! recursive_m (5, i);
+		futures = Cons( f, futures );
+		i = i + 1 ;
+	}
+	while ( futures != Nil ){
+		Fut<Int> f1 = head(futures);
+		futures = tail(futures);
+		Int r = f1.get;
 }	}
 \end{lstlisting}
 %>>>>>>> Stashed changes
