@@ -1,5 +1,7 @@
 \section{Conclusions}
 \label{conc}
+%future work type checking
+%mention debugging
 In this paper we proposed a Java library for efficiently implementing the cooperative scheduling behavior of ABS. We observed significant improvements due to the trade-off of saving continuations including the call stack as data in memory instead of native Java threads. 
 
 To provide support for the functional data types required by ABS we extended the backend to the Scala programming language together with this library. We want to study how well these models execute into the Java Runtime Environment compared to their direct implementations without the use of modeling languages. Furthermore having a portable JVM library gives us a basis for industrial adoption of the ABS language.  Finally this provides an opportunity to use ABS rich features in formal verification,  resource analysis and deadlock detection as well as extensions that support real-time and distributed programming, in a software development context. 

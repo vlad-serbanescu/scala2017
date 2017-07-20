@@ -1,5 +1,11 @@
 \section{Introduction}
 
+%how this scala library is build up
+%compiler which translates to scala making use of features for the functional part, source-to-source translation
+%underlying java library iwth the thread model
+%this compiler supports the FLI
+
+
 The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. 
 Actors represent processes that execute in parallel and interact via asynchronous communication of messages. 
 The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}.
@@ -29,7 +35,7 @@ is translated into a corresponding lambda expression~\cite{lambdas} which is pas
 an object of type Callable or Runnable (depending on whether it returns a result). 
 
 In this paper, we describe how we implemented ABS actors and cooperative scheduling using Java thread pools and executor services.  
-As elaborated in Section \ref{}, we took an approach with negligible performace penalties regarding message passing and cooperative scheduling. 
+As elaborated in Section \ref{}, we took an approach with negligible performance penalties regarding message passing and cooperative scheduling. 
 We describe step by step how to support up to millions of messages,  actors, and suspended continuations.
 
 
@@ -39,7 +45,11 @@ We describe step by step how to support up to millions of messages,  actors, and
 By means of a typical benchmark we evaluate our proposed solution and compare it
 to other thread-based implementations in Java or Erlang(a language that uses lightweight threads) of cooperative scheduling.
 
-\paragraph{Related Work.} Our main motivation is a Java implementation of the ABS language as a full-fledged Actor-based programming language which fully supports the "programming to interfaces'' paradigm.
+
+%relted work takka.
+% the original version of Akka did not support it, but a recent version provides a first approach to programming to interfaces Takka.
+\paragraph{Related Work.} 
+Our main motivation is a Java implementation of the ABS language as a full-fledged Actor-based programming language which fully supports the "programming to interfaces'' paradigm.
 In contrast, Java libraries for programming actors like Akka~\cite{Akka} mainly provide pure asynchronous message passing which does not support the use of application programming interfaces (API) because, for example, in Akka/Java a message is only typed as a Java Object, so there is no static typing of messages, nor are they part of the actor interface.
 Furthermore, distinguishing features of the ABS comprise of high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
 formal analysis of deadlock~\cite{deadlock}.

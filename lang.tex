@@ -10,11 +10,13 @@ In this section we informally describe the main features of the flow of control
 underlying the semantics of cooperative scheduling in the ABS language.
 For a detailed description of the syntax of the ABS language we refer to~\cite{abs}.
 
+
+%await on booleans
 \subsection{Method Invocations}\label{amc}
 Abstracting from the syntax of the actual parameters,
 in ABS an asynchronous invocation of a method \lstinline|m| of an actor \lstinline|a| is described by a statement
 \lstinline|Future f=a!m()|, where f is a future used to store the return value
-(asuming that m contains a return statement).
+(assuming that m contains a return statement).
 In our backend this invocation will be stored in a queue of the called actor a.
 Futures can be passed around as references and provide a get operation
 described by \lstinline|f.get| which results in the value returned and blocks
@@ -58,18 +60,42 @@ another process of the same actor (COG). It thus blocks the entire actor (COG). 
 %=======
 %The "await" statement of ABS offers a high level mechanism that controls execution within an actor based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" as it does not block the entire execution of the actor, but instead blocks the current message from which the "await" statement was called and allows the actor to continue with executing other messages that are available in its queue. Similarly, for example \lstinline|await this.boolVar| will suspend the current message executing this statement until the field boolVar is set to true (while another method is being executed). In both uses of the "await" construct the suspended message will be made available once the future is completed or the boolean condition evaluates to true. Now we have a simple solution for translating \lstinline|this.m()| without creating a deadlock by translating it to \lstinline|Future f=a!m(); await f?|, but we still need to preserve the logic and resume from this point once \lstinline|m()| has completed. The basic non-deterministic scheduling policy does not guarantee this unless at the semantic level there is a specific contruct\cite{creol,resume}. The sketch of such a scenario is given in Listing \ref{ex}. 
 %
-\begin{lstlisting}[caption=ABS Example, label=ex]
-	m1( ){
-		...;
-		this.m2( );
-		...	//continuation of m1 <=>$C(m_1)$
-	}
+\begin{lstlisting}[caption= Benchmark Example, label=absex]
+interface Ainterface {
+Int recursive_m(Int i, Int id);
+}
 
-	m2( ){
-		...
-		await f?
-		.... //continuation of m2 <=>$C(m_2)$
-	}
+class A() implements Ainterface{
+Int result=0;
+Int recursive_m(Int i, Int id){
+if (i>0){
+this.recursive_m(i - 1,id);	
+}
+else{
+Fut<Int> f = this ! compute( );
+await f ?;
+}
+return 1;
+}
+Int compute( ){
+result = result + 1;	//no significant computation
+return result;
+}	}
+
+{ // Main block:
+Int i = 0;	
+Ainterface master = new A ( );
+List<Fut<Int>> futures = Nil;	
+while( i < 500){		
+Fut<Int> f = master ! recursive_m (5, i);
+futures = Cons( f, futures );
+i = i + 1 ;
+}
+while ( futures != Nil ){
+Fut<Int> f1 = head(futures);
+futures = tail(futures);
+Int r = f1.get;
+}	}
 \end{lstlisting}
 %>>>>>>> Stashed changes
 
