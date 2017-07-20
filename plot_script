@@ -1,0 +1,25 @@
+# Gnuplot script file for plotting data in file "force.dat"
+# This file is called   lot_script
+set key font "Times-Roman,10"
+set key tmargin
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+#set ytic auto                          # set ytics automatically
+#set logscale x
+set xlabel "Board Size (Number of solutions)" font 'Times-Roman,12'
+set ylabel "Time (seconds)" font 'Times-Roman,12'
+set xr [5:13]
+set yr [0:110] 
+set label "Out-of-memory " at 10, 72 tc rgb "red" font 'Arial,9'
+set label "Error" at 10.7,66 tc rgb "red" font 'Arial,9'
+set label "+" at 11,60 tc rgb "red" font 'Arial,7'
+#set datafile separator ","
+set terminal pdf
+#set xtics offset 0,0.5
+#set xtics ('0' 6, '1' 7, '2' 8, '4' 9, '8' 10, '16' 11)
+set output 'erlj8.pdf'
+plot "nqueens.txt" using 1:3:xtic(2) title 'Process-Oriented Approach in Java' with linespoints lt rgb "red",\
+ "nqueens.txt" using 1:4:xtic(2) title 'Process-Oriented Approach in Erlang' with linespoints lt rgb "blue", \
+"nqueens.txt" using 1:5:xtic(2) title 'Data-Oriented Approach in Scala' with linespoints lt rgb "green"
+set output
