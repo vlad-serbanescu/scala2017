@@ -50,7 +50,7 @@ to other thread-based implementations in Java or Erlang(a language that uses lig
 %related work takka.
 % the original version of Akka did not support it, but a recent version provides a first approach to programming to interfaces Takka.
 \paragraph{Related Work.} 
-Our main motivation is a Scala implementation of the ABS language as a full-fledged Actor-based programming language which fully supports the "programming to interfaces'' paradigm. 
+In this paper we provide a Scala implementation of the ABS language as a full-fledged Actor-based programming language which features cooperative scheduling and fully supports the "programming to interfaces'' paradigm. 
 In contrast, Java libraries for programming actors like Akka~\cite{Akka} mainly provide pure asynchronous message passing which does not support the use of application programming interfaces (API) because, for example, in Akka/Java a message is only typed as a Java Object, so there is no static typing of messages, nor are they part of the actor interface.  A first approach for supporting programming to interfaces was proposed in Takka library~\cite{takka}. 
 Distinguishing features of the ABS comprise of high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
 formal analysis of deadlock~\cite{deadlock}.
