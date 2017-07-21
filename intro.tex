@@ -28,11 +28,12 @@ Bear in mind that the continuation will be executed in the same actor thread thu
 
 %In this paper we introduce and evaluate a new run-time system in Java for the use of ABS as a full-fledged programming language. 
 %As such our run-time system allows a component-based design in Java when following the ABS programming methodology.
-The main challenge is the development of an efficient and scalable source-to-source implementation of cooperative scheduling which, in the presence of synchronous calls, gives rise to the suspension of the entire call stack generated from a message.
-The continuation of the suspended message including the stack frame needs to be saved in order for execution to resume properly once the message is rescheduled.
+The main challenge is the development of an efficient and scalable source-to-source implementation of cooperative scheduling. 
+%which, in the presence of synchronous calls, gives rise to the suspension of the entire call stack generated from a message.
+%The continuation of the suspended message including the stack frame needs to be saved in order for execution to resume properly once the message is rescheduled.
 The basic feature of our proposed solution is the implementation of messages by means of lambda expressions (as provided by Java 8), i.e., the method call specified in a message
 is translated into a corresponding lambda expression~\cite{lambdas} which is passed and stored as
-an object of type Callable or Runnable (depending on whether it returns a result). 
+an object of type Callable or Runnable (depending on whether it returns a result). We show how this basic feature is extended in the presence of synchronous calls that give rise to the suspension of the entire call stack generated from a message.
 
 We describe how we implemented ABS actors and cooperative scheduling using Java thread pools and executor services.  
 As elaborated in Section \ref{bench}, we took an approach with negligible performance penalties regarding message passing and cooperative scheduling. 
