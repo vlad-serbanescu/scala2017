@@ -1,0 +1,81 @@
+This is BibTeX, Version 0.99d (TeX Live 2014)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: acmart-sigplanproc-template.aux
+The style file: ACM-Reference-Format.bst
+Illegal, another \bibstyle command---line 103 of file acmart-sigplanproc-template.aux
+ : \bibstyle
+ :          {ACM-Reference-Format}
+I'm skipping whatever remains of this command
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: bibliography.bib
+Warning--I didn't find a database entry for "lambdas"
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty publisher in saco
+Warning--empty address in saco
+Warning--no number and no volume in Haskell
+Warning--page numbers missing in both pages and numpages fields in Haskell
+Warning--empty publisher in cloud
+Warning--empty address in cloud
+Warning--empty publisher in Encore
+Warning--empty address in Encore
+Warning--empty publisher in KeY
+Warning--empty address in KeY
+Warning--empty address in dead
+Warning--empty publisher in Erlang
+Warning--empty address in Erlang
+Warning--empty address in Akka
+Warning--empty publisher in takka
+Warning--empty address in takka
+Warning--empty publisher in savina
+Warning--empty address in savina
+Warning--empty publisher in abs
+Warning--empty address in abs
+Warning--empty publisher in paj8
+Warning--empty address in paj8
+Warning--empty address in Schafer
+Warning--no number and no volume in Sirjani
+Warning--page numbers missing in both pages and numpages fields in Sirjani
+You've used 18 entries,
+            5758 wiz_defined-function locations,
+            1416 strings with 18722 characters,
+and the built_in function-call counts, 21763 in all, are:
+= -- 2560
+> -- 847
+< -- 0
++ -- 268
+- -- 292
+* -- 1562
+:= -- 2250
+add.period$ -- 94
+call.type$ -- 18
+change.case$ -- 133
+chr.to.int$ -- 18
+cite$ -- 43
+duplicate$ -- 1949
+empty$ -- 1360
+format.name$ -- 352
+if$ -- 5168
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 70
+newline$ -- 175
+num.names$ -- 144
+pop$ -- 773
+preamble$ -- 1
+purify$ -- 294
+quote$ -- 0
+skip$ -- 681
+stack$ -- 0
+substring$ -- 1574
+swap$ -- 184
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 440
+warning$ -- 25
+while$ -- 143
+width$ -- 0
+write$ -- 344
+(There was 1 error message)

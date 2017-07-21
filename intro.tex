@@ -31,13 +31,13 @@ Bear in mind that the continuation will be executed in the same actor thread thu
 The main challenge is the development of an efficient and scalable source-to-source implementation of cooperative scheduling. 
 %which, in the presence of synchronous calls, gives rise to the suspension of the entire call stack generated from a message.
 %The continuation of the suspended message including the stack frame needs to be saved in order for execution to resume properly once the message is rescheduled.
-The basic feature of our proposed solution is the implementation of messages by means of lambda expressions (as provided by Java 8), i.e., the method call specified in a message
+The basic feature of our proposed solution is the implementation of messages as described in~\cite{paj8} by means of lambda expressions (as provided by Java 8), i.e., the method call specified in a message
 is translated into a corresponding lambda expression~\cite{lambdas} which is passed and stored as
 an object of type Callable or Runnable (depending on whether it returns a result). We show how this basic feature is integrated in a general Scala/Java run-time system for ABS which also caters for synchronous calls that give rise to the suspension of the entire call stack generated from a message.
 
 We describe how we implemented ABS actors and cooperative scheduling using Java thread pools and executor services.  
 As elaborated in Section \ref{bench}, we took an approach with negligible performance penalties regarding message passing and cooperative scheduling. 
-We describe step by step how to support up to millions of messages,  actors, and suspended continuations.
+We describe step by step how to support up to millions of messages, actors, and suspended continuations.
 
 
 %This feature forms the basis of a run-time system which manages
@@ -59,8 +59,8 @@ The Actor model in Scala~\cite{Scala} does provide a suspension mechanism, but i
 degradation of performance.
 It is possible to register a {\em continuation} piece of code to run upon completion of a future, but that may run in a separate thread which however breaks the actor semantics and may cause race conditions inside the actor.
 
-There exist various implementation attempts for cooperative scheduling in ABS.
-The approach followed in the Java backend of ABS~\cite{abs,Schafer} and in the Erlang backend~\cite{Erlang} is process-oriented in the sense that sending a message is implemented by the generation of a corresponding process. We will compare these backends with our solution in Java which allows to store messages (as objects of type Callable or Runnable) before executing them (data-oriented).
+There exist various implementation attempts for cooperative scheduling in ABS. 
+The approach followed in the Java backend of ABS~\cite{abs,Schafer} and in the Erlang backend~\cite{Erlang} is process-oriented in the sense that sending a message is implemented by the generation of a corresponding process. We will compare these backends with our solution in Java which allows to store messages (as objects of type Callable or Runnable) before executing them (data-oriented). Our solution builds on this work and extends it with a compiler with full support for cooperative scheduling in the context of both synchronous and asynchronous calls, functional programming and foreign language interface. 
 
 The focus of our paper is on an efficient implementation of cooperative scheduling in Java.
 Implementations in other languages allow for different approaches:

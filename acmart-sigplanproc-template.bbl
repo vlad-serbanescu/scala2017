@@ -1,0 +1,266 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{00}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[\protect\citeauthoryear{Agha}{Agha}{1985}]%
+        {Agha}
+\bibfield{author}{\bibinfo{person}{Gul~A Agha}.}
+  \bibinfo{year}{1985}\natexlab{}.
+\newblock \bibinfo{booktitle}{{\em Actors: A model of concurrent computation in
+  distributed systems.}}
+\newblock \bibinfo{type}{{T}echnical {R}eport}.
+  \bibinfo{institution}{MASSACHUSETTS INST OF TECH CAMBRIDGE ARTIFICIAL
+  INTELLIGENCE LAB}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Albert, Arenas, Flores-Montoya, Genaim,
+  G{\'o}mez-Zamalloa, Martin-Martin, Puebla, and Rom{\'a}n-D{\'\i}ez}{Albert
+  et~al\mbox{.}}{2014}]%
+        {saco}
+\bibfield{author}{\bibinfo{person}{Elvira Albert}, \bibinfo{person}{Puri
+  Arenas}, \bibinfo{person}{Antonio Flores-Montoya}, \bibinfo{person}{Samir
+  Genaim}, \bibinfo{person}{Miguel G{\'o}mez-Zamalloa},
+  \bibinfo{person}{Enrique Martin-Martin}, \bibinfo{person}{Germ{\'a}n Puebla},
+  {and} \bibinfo{person}{Guillermo Rom{\'a}n-D{\'\i}ez}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{SACO: Static Analyzer for Concurrent Objects.}. In
+  \bibinfo{booktitle}{{\em TACAS}}, Vol.~\bibinfo{volume}{14}.
+  \bibinfo{pages}{562--567}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Albert, Bezirgiannis, de~Boer, and
+  Martin-Martin}{Albert et~al\mbox{.}}{2016}]%
+        {Haskell}
+\bibfield{author}{\bibinfo{person}{Elvira Albert}, \bibinfo{person}{Nikolaos
+  Bezirgiannis}, \bibinfo{person}{Frank de Boer}, {and}
+  \bibinfo{person}{Enrique Martin-Martin}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{A Formal, Resource Consumption-Preserving
+  Translation of Actors to Haskell}.
+\newblock \bibinfo{journal}{{\em arXiv preprint arXiv:1608.02896\/}}
+  (\bibinfo{year}{2016}).
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Bezirgiannis and de~Boer}{Bezirgiannis and
+  de~Boer}{2016}]%
+        {cloud}
+\bibfield{author}{\bibinfo{person}{Nikolaos Bezirgiannis} {and}
+  \bibinfo{person}{Frank de Boer}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{ABS: a high-level modeling language for cloud-aware
+  programming}. In \bibinfo{booktitle}{{\em International Conference on Current
+  Trends in Theory and Practice of Informatics}}. Springer,
+  \bibinfo{pages}{433--444}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Bj{\o}rk, de~Boer, Johnsen, Schlatte, and
+  Tarifa}{Bj{\o}rk et~al\mbox{.}}{2013}]%
+        {rabs}
+\bibfield{author}{\bibinfo{person}{Joakim Bj{\o}rk}, \bibinfo{person}{Frank~S
+  de Boer}, \bibinfo{person}{Einar~Broch Johnsen}, \bibinfo{person}{Rudolf
+  Schlatte}, {and} \bibinfo{person}{S~Lizeth~Tapia Tarifa}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{User-defined schedulers for real-time concurrent
+  objects}.
+\newblock \bibinfo{journal}{{\em Innovations in Systems and Software
+  Engineering\/}} \bibinfo{volume}{9}, \bibinfo{number}{1}
+  (\bibinfo{year}{2013}), \bibinfo{pages}{29--43}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Brandauer, Castegren, Clarke, Fernandez-Reyes,
+  Johnsen, Pun, Tarifa, Wrigstad, and Yang}{Brandauer et~al\mbox{.}}{2015}]%
+        {Encore}
+\bibfield{author}{\bibinfo{person}{Stephan Brandauer}, \bibinfo{person}{Elias
+  Castegren}, \bibinfo{person}{Dave Clarke}, \bibinfo{person}{Kiko
+  Fernandez-Reyes}, \bibinfo{person}{Einar~Broch Johnsen},
+  \bibinfo{person}{Ka~I Pun}, \bibinfo{person}{S~Lizeth~Tapia Tarifa},
+  \bibinfo{person}{Tobias Wrigstad}, {and} \bibinfo{person}{Albert~Mingkun
+  Yang}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Parallel objects for multicores: A glimpse at the
+  parallel language Encore}. In \bibinfo{booktitle}{{\em International School
+  on Formal Methods for the Design of Computer, Communication and Software
+  Systems}}. Springer, \bibinfo{pages}{1--56}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Din, Bubel, and H{\"a}hnle}{Din
+  et~al\mbox{.}}{2015}]%
+        {KeY}
+\bibfield{author}{\bibinfo{person}{Crystal~Chang Din}, \bibinfo{person}{Richard
+  Bubel}, {and} \bibinfo{person}{Reiner H{\"a}hnle}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{KeY-ABS: a deductive verification tool for the
+  concurrent modelling language ABS}. In \bibinfo{booktitle}{{\em International
+  Conference on Automated Deduction}}. Springer, \bibinfo{pages}{517--526}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Flores-Montoya, Albert, and
+  Genaim}{Flores-Montoya et~al\mbox{.}}{2013}]%
+        {dead}
+\bibfield{author}{\bibinfo{person}{Antonio~E Flores-Montoya},
+  \bibinfo{person}{Elvira Albert}, {and} \bibinfo{person}{Samir Genaim}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{May-happen-in-parallel based deadlock analysis for
+  concurrent objects}.
+\newblock In \bibinfo{booktitle}{{\em Formal Techniques for Distributed
+  Systems}}. \bibinfo{publisher}{Springer}, \bibinfo{pages}{273--288}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Giachino, Laneve, and Lienhardt}{Giachino
+  et~al\mbox{.}}{2016}]%
+        {deadlock}
+\bibfield{author}{\bibinfo{person}{Elena Giachino}, \bibinfo{person}{Cosimo
+  Laneve}, {and} \bibinfo{person}{Michael Lienhardt}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{A framework for deadlock detection in core ABS}.
+\newblock \bibinfo{journal}{{\em Software \& Systems Modeling\/}}
+  \bibinfo{volume}{15}, \bibinfo{number}{4} (\bibinfo{year}{2016}),
+  \bibinfo{pages}{1013--1048}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{G{\"o}ri, Johnsen, Schlatte, and
+  Stolz}{G{\"o}ri et~al\mbox{.}}{2014}]%
+        {Erlang}
+\bibfield{author}{\bibinfo{person}{Georg G{\"o}ri},
+  \bibinfo{person}{Einar~Broch Johnsen}, \bibinfo{person}{Rudolf Schlatte},
+  {and} \bibinfo{person}{Volker Stolz}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Erlang-style error recovery for concurrent objects
+  with cooperative scheduling}. In \bibinfo{booktitle}{{\em International
+  Symposium On Leveraging Applications of Formal Methods, Verification and
+  Validation}}. Springer, \bibinfo{pages}{5--21}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Gupta}{Gupta}{2012}]%
+        {Akka}
+\bibfield{author}{\bibinfo{person}{Munish Gupta}.}
+  \bibinfo{year}{2012}\natexlab{}.
+\newblock \bibinfo{booktitle}{{\em Akka essentials}}.
+\newblock \bibinfo{publisher}{Packt Publishing Ltd}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Haller and Odersky}{Haller and
+  Odersky}{2009}]%
+        {Scala}
+\bibfield{author}{\bibinfo{person}{Philipp Haller} {and}
+  \bibinfo{person}{Martin Odersky}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Scala actors: Unifying thread-based and event-based
+  programming}.
+\newblock \bibinfo{journal}{{\em Theoretical Computer Science\/}}
+  \bibinfo{volume}{410}, \bibinfo{number}{2} (\bibinfo{year}{2009}),
+  \bibinfo{pages}{202--220}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{He, Wadler, and Trinder}{He
+  et~al\mbox{.}}{2014}]%
+        {takka}
+\bibfield{author}{\bibinfo{person}{Jiansen He}, \bibinfo{person}{Philip
+  Wadler}, {and} \bibinfo{person}{Philip Trinder}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Typecasting actors: from Akka to TAkka}. In
+  \bibinfo{booktitle}{{\em Proceedings of the Fifth Annual Scala Workshop}}.
+  ACM, \bibinfo{pages}{23--33}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Imam and Sarkar}{Imam and Sarkar}{2014}]%
+        {savina}
+\bibfield{author}{\bibinfo{person}{Shams~M Imam} {and} \bibinfo{person}{Vivek
+  Sarkar}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Savina-an actor benchmark suite: Enabling empirical
+  evaluation of actor libraries}. In \bibinfo{booktitle}{{\em Proceedings of
+  the 4th International Workshop on Programming based on Actors Agents \&
+  Decentralized Control}}. ACM, \bibinfo{pages}{67--80}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Johnsen, H{\"a}hnle, Sch{\"a}fer, Schlatte,
+  and Steffen}{Johnsen et~al\mbox{.}}{2012}]%
+        {abs}
+\bibfield{author}{\bibinfo{person}{Einar~Broch Johnsen},
+  \bibinfo{person}{Reiner H{\"a}hnle}, \bibinfo{person}{Jan Sch{\"a}fer},
+  \bibinfo{person}{Rudolf Schlatte}, {and} \bibinfo{person}{Martin Steffen}.}
+  \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{ABS: A core language for abstract behavioral
+  specification}. In \bibinfo{booktitle}{{\em Formal Methods for Components and
+  Objects}}. Springer, \bibinfo{pages}{142--164}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Nobakht and de~Boer}{Nobakht and
+  de~Boer}{2014}]%
+        {paj8}
+\bibfield{author}{\bibinfo{person}{Behrooz Nobakht} {and}
+  \bibinfo{person}{Frank~S de Boer}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Programming with actors in Java 8}. In
+  \bibinfo{booktitle}{{\em International Symposium On Leveraging Applications
+  of Formal Methods, Verification and Validation}}. Springer,
+  \bibinfo{pages}{37--53}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Sch{\"a}fer}{Sch{\"a}fer}{2011}]%
+        {Schafer}
+\bibfield{author}{\bibinfo{person}{Jan Sch{\"a}fer}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \bibinfo{booktitle}{{\em A programming model and language for
+  concurrent and distributed object-oriented systems}}.
+\newblock \bibinfo{publisher}{University of Kaiserslautern}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Sirjani and Movaghar}{Sirjani and
+  Movaghar}{2001}]%
+        {Sirjani}
+\bibfield{author}{\bibinfo{person}{M Sirjani} {and} \bibinfo{person}{A
+  Movaghar}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{An actor-based model for formal modelling of
+  reactive systems: Rebeca}.
+\newblock \bibinfo{journal}{{\em Technical Report\/}} (\bibinfo{year}{2001}).
+\newblock
+
+
+\end{thebibliography}
