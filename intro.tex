@@ -5,12 +5,12 @@
 %underlying java library iwth the thread model
 %this compiler supports the FLI
 
+%the actor-based model smotthly integrates with scala
 
 The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. 
 Actors represent processes that execute in parallel and interact via asynchronous communication of messages. 
-The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling parallel and distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}.
-In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library that can be directly used from Scala and Java. Our solution uses an underlying thread model implemented in Java to support a very powerful feature of ABS, namely cooperative scheduling. Together with this model we provide a source-to-source translation from ABS to Scala to support both the object-oriented and functional programming paradigms of ABS. Finally the library has support for a Foreign Language Interface (FLI) that allows the usage of Java and Scala classes or interfaces directly in ABS. 
-
+The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling parallel and distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}. Syntactically ABS has a similar structure to Java and Scala languages, offering both functional and object-oriented support.
+In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library that can be directly used from Scala and Java. Our solution uses an underlying thread model implemented in Java to support a very powerful feature of ABS, namely cooperative scheduling. Together with this model we provide a source-to-source translation from ABS to Scala to support both the object-oriented and functional programming paradigms of ABS. Most importantly the library has support for a Foreign Language Interface (FLI) that offers ABS as a smooth extension of the Scala language. As such it extends Scala with a new concurrency model and corresponding analysis techniques.
 % e.g., recent developments have focused on the modeling and analysis of Cloud applications~\cite{Albert}. 
 
 
@@ -49,7 +49,7 @@ to other thread-based implementations in Java or Erlang(a language that uses lig
 %related work takka.
 % the original version of Akka did not support it, but a recent version provides a first approach to programming to interfaces Takka.
 \paragraph{Related Work.} 
-Our main motivation is an implementation of the ABS language as a full-fledged Actor-based programming language which fully supports the "programming to interfaces'' paradigm. 
+Our main motivation is a Scala implementation of the ABS language as a full-fledged Actor-based programming language which fully supports the "programming to interfaces'' paradigm. 
 In contrast, Java libraries for programming actors like Akka~\cite{Akka} mainly provide pure asynchronous message passing which does not support the use of application programming interfaces (API) because, for example, in Akka/Java a message is only typed as a Java Object, so there is no static typing of messages, nor are they part of the actor interface.  A first approach for supporting programming to interfaces was proposed in Takka library~\cite{takka}. 
 Distinguishing features of the ABS comprise of high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
 formal analysis of deadlock~\cite{deadlock}.

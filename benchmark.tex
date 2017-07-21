@@ -29,7 +29,6 @@ trait Ainterface extends Actor with Ordered[Actor] {
 class A() extends LocalActor with Ainterface {
 
 	var result : Int =  0;
-	
 	def recursive_m( i : Int,  id : Int): Int= {
 		if ((i > 0)) {
 			var msg : Callable[Int] = () => this.recursive_m((i - 1), id);
@@ -82,7 +81,7 @@ object Main extends LocalActor {
 }	}	}
 \end{lstlisting}
 
-\par The model creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,i|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result. Although simple, this example allows us to benchmark the pure overhead that arises from having a runtime system with cooperative scheduling support, both in a data-oriented approach and a process-oriented approach. The results are shown in Figure~\ref{jj}. The performance figures presented are for one actor that is running 500-2500 method invocations. It is important to observe that each invocation generates 2 messages in the actor’s queue, so as the number of calls increases the number of messages doubles. The figures show that the trade-off for storing continuations into memory instead of saving them in native threads removes limitations on the application and significantly reduces overhead. 
+\par The model creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,i|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result. Although simple, this example allows us to benchmark the pure overhead that arises from having a runtime system with cooperative scheduling support, both in a data-oriented approach and a process-oriented approach. The results are shown in Figure~\ref{jj}. The performance figures presented are for one actor that is running 500-2500 method invocations. It is important to observe that each invocation generates 2 messages in the actor's queue, so as the number of calls increases the number of messages doubles. The figures show that the trade-off for storing continuations into memory instead of saving them in native threads removes limitations on the application and significantly reduces overhead. 
 
 \begin{figure}
 	\centering
