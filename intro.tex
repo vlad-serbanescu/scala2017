@@ -33,7 +33,7 @@ The main challenge is the development of an efficient and scalable source-to-sou
 %The continuation of the suspended message including the stack frame needs to be saved in order for execution to resume properly once the message is rescheduled.
 The basic feature of our proposed solution is the implementation of messages by means of lambda expressions (as provided by Java 8), i.e., the method call specified in a message
 is translated into a corresponding lambda expression~\cite{lambdas} which is passed and stored as
-an object of type Callable or Runnable (depending on whether it returns a result). We show how this basic feature is integrated in the general run-time system which also caters to synchronous calls that give rise to the suspension of the entire call stack generated from a message.
+an object of type Callable or Runnable (depending on whether it returns a result). We show how this basic feature is integrated in a general Scala/Java run-time system for ABS which also caters for synchronous calls that give rise to the suspension of the entire call stack generated from a message.
 
 We describe how we implemented ABS actors and cooperative scheduling using Java thread pools and executor services.  
 As elaborated in Section \ref{bench}, we took an approach with negligible performance penalties regarding message passing and cooperative scheduling. 
