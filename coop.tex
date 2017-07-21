@@ -18,7 +18,7 @@ In this section we present how the Scala language is used as a backend for ABS a
 
 %\subsection{Modeling Language Concepts in the JVM}
 
-\subsection{Every asynchronous call is a thread and each actor has a lock.}
+\subsection{Every asynchronous call is a thread and each actor has a lock}
 The trivial straightforward approach for implementing cooperative scheduling in the library is for an asynchronous call to generate a new native thread with its own stack and context. We would then model each actor as an object with a lock for which threads compete. The disadvantage here is that this lock-per-actor must be checked by every message handler upon start, and freed upon completion. Whenever an await statement occurs the thread would be suspended by the JVM's normal behavior. When the release condition is enabled, a suspended thread would become available and in turn compete with the other threads in order to execute on the actor. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the number of live native threads. Figure~\ref{tp} provides an illustration of this base \textit{process-oriented} approach. Here the idea is that the threads in the circle belong to one actor, thus sharing a lock(the green thread holds the lock, while the red ones are waiting to acquire it). The four Actor features are implemented as follows:
 
 \begin{itemize}
@@ -78,7 +78,7 @@ In the previous two approaches we modeled the concept of an actor being restrict
 
 
 
-%We solve the problem by using an indirection, instead of submitting the messages to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second pahse the submission to the thread pool.
+%We solve the problem by using an indirection, instead of submitting the messages to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second phase the submission to the thread pool.
 
 
 \begin{figure}
