@@ -59,114 +59,81 @@ invocation corresponding to the future \texttt{f} has computed the return value.
 Similarly, a statement of the form \texttt{await b}, where \texttt{b} denotes a boolean expression, suspends the executing process which can only be rescheduled if \texttt{b} evaluates to true. Finally a \texttt{suspend} statement invokes cooperative scheduling without a condition. In all cases the executing process can be suspended and another (enabled) message can be scheduled for execution.
 In contrast, a statement like \texttt{f.get} does not allow the scheduling of
 another process of the same actor. It thus blocks the entire actor. Listing~\ref{absex} gives an excerpt of the ABS model of the NQueens benchmark that uses cooperative scheduling to partial solutions in parallel. It is important to observe the call on line 35 that is followed by an \texttt{await f?}. This allows the master to send computation requests to the workers and then wait for the results. This call suspends the current message execution of the master, but still allows it to precess calls like lines 51 and 56 that come from the workers. In Section~\ref{bench2} we will discuss the performance of this benchmark in comparison with the Akka Actor model implementation.
-%=======
-%The "await" statement of ABS offers a high level mechanism that controls execution within an actor based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" as it does not block the entire execution of the actor, but instead blocks the current message from which the "await" statement was called and allows the actor to continue with executing other messages that are available in its queue. Similarly, for example \lstinline|await this.boolVar| will suspend the current message executing this statement until the field boolVar is set to true (while another method is being executed). In both uses of the "await" construct the suspended message will be made available once the future is completed or the boolean condition evaluates to true. Now we have a simple solution for translating \lstinline|this.m()| without creating a deadlock by translating it to \lstinline|Future f=a!m(); await f?|, but we still need to preserve the logic and resume from this point once \lstinline|m()| has completed. The basic non-deterministic scheduling policy does not guarantee this unless at the semantic level there is a specific contruct\cite{creol,resume}. The sketch of such a scenario is given in Listing \ref{ex}. 
-%
-%\begin{lstlisting}[caption= ABS Example, label=absex]
-%interface Ainterface {
-%	Int recursive_m(Int i, Int id);
+
+
+%// Interfaces
+%interface IMaster {
+%	Unit sendWork(List<Int> list, Int depth, Int priorities);
+%	Unit success();
 %}
 %
-%class A() implements Ainterface{
-%	Int result=0;
-%	Int recursive_m(Int i, Int id){
-%		if (i>0){
-%			this.recursive_m(i - 1,id);	
-%		}
-%		else{
-%			Fut<Int> f = this ! compute( );
-%			await f ?;
-%		}
-%		return 1;
-%	}
-%	
-%	Int compute( ){
-%		result = result + 1;	//no significant computation
-%		return result;
-%	}	}
+%interface IWorker {
+%	Unit  nqueensKernelPar(List<Int> list, Int depth, Int priority);
+%}
 %
-%{ // Main block:
-%	Int i = 0;	
-%	Ainterface master = new A ( );
-%	List<Fut<Int>> futures = Nil;	
-%	while( i < 2000){		
-%		Fut<Int> f = master ! recursive_m (5, i);
-%		futures = Cons( f, futures );
-%		i = i + 1 ;
-%	}
-%	while ( futures != Nil ){
-%		Fut<Int> f1 = head(futures);
-%		futures = tail(futures);
-%		Int r = f1.get;
-%}	}
-%\end{lstlisting}
-%>>>>>>> Stashed changes
+%// Classes
 
-\begin{lstlisting}[caption= ABS Example, label=absex]
-// Interfaces
-interface IMaster {
-	Unit sendWork(List<Int> list, Int depth, Int priorities);
-	Unit success();
-}
-
-interface IWorker {
-	Unit  nqueensKernelPar(List<Int> list, Int depth, Int priority);
-}
-
-// Classes
-class Master (Int numWorkers, Int priorities, Int solutionsLimit, Int threshold, Int size) 
-					implements IMaster {
-	List<IWorker> workers = Nil;
-	Int messageCounter = 0;
-	
-	{
-		Int i = 0;
-		while (i <= numWorkers) {
-			IWorker w = new Worker(this,threshold,size);
-			workers = Cons(w,workers);
-			i = i+1;
-		}
-		this!sendWork(Nil, 0, priorities); // triggers computation
+\begin{lstlisting}[caption=NQueens in ABS , label=absex]
+class Master (Int numWorkers, Int boardSize) implements IMaster {
+	{   // constructor
+		createWorkers(numWorkers);
+		this ! sendWorkRoundRobin(...); // start computation
 	}
-	
-	Unit success(){
-		resultCounter = resultCounter+1;
-		if (resultCounter == solutionsLimit) {
-			println("Found " + toString(resultCounter) + " solutions");
-			println("Program successfully completed!");
-	}	}
-	
-	Unit sendWork(List<Int> list, Int depth, Int priorities){
-		Fut<Unit> f = 
-			nth(workers,messageCounter)!nqueensKernelPar(list,depth,priorities);
-		messageCounter = (messageCounter + 1) % numWorkers;
-		await f? ;
-	}	}
+	Unit success(Result result) { /* process one result */ }
+	Unit sendWorkRoundRobin(...) {
+		IWorker worker = chooseWorker();
+		worker ! nqueensKernelPar(...);
+}	}
 
-class Worker(IMaster master, Int threshold, Int size) implements IWorker {
+class Worker(IMaster master, Int boardSize) implements IWorker {
 	Unit nqueensKernelPar(List<Int> list, Int depth, Int priority) {
-		Int i = 0;
-		if (size != depth) { 
-			if (depth >= threshold) {
-				this.nqueensKernelSeq(list, depth);
-			} else {
-				while (i < size) {
-					List<Int> newlist = appendright(list,i);
-					if (boardValid(0, newlist,depth+1)) {
-						master!sendWork(newlist,depth+1,priority-1); // send new job to Master
-					}
-					i = i+1;
-		}	}	}
+		Result result;
+		if (...) { 
+    		Int i = 0;
+			while (i < boardSize) {
+				if (boardValid(i, ...)) {
+					master ! sendWorkRoundrobin(...); // start a parallel subtask
+				}
+				i = i+1;
+		}	}
 		else {
-			master!success();
-	}	}
-	
-	Unit nqueensKernelSeq(List<Int> list, Int depth) {
-		Int i = 0;
-		if (size != depth) {
-			//finish solution sequentially
-		} else {
-			master!success();
+			master ! success(result);
+}	}	}
+\end{lstlisting}
+
+
+\begin{lstlisting}[caption=NQueens in ABS , label=absex]
+class Master (Int numWorkers, Int boardSize) implements IMaster {
+	{   // constructor
+		createWorkers(numWorkers);
+		Future<List<Result>> fut = this ! sendWorkRoundRobin(...); // start computation
+		await f?
+		// process all restuls
+	}
+	List<Result> sendWorkRoundRobin(...) {
+		IWorker worker = chooseWorker();
+		worker ! nqueensKernelPar(...);
+}	}
+
+class Worker(IMaster master, Int boardSize) implements IWorker {
+	Result nqueensKernelPar(List<Int> list, Int depth, Int priority) {
+		List<Result> results = Nil;
+		if (...) { 
+			List<Future<List<Result>>> futList = Nil;
+    		Int i = 0;
+			while (i < boardSize) {
+				if (boardValid(i, ...)) {
+					Future<List<Result>> fut = master ! sendWorkRoundrobin(...); // start a parallel subtask
+					futList = Cons(fut, futList);
+				}
+				i = i+1;
+			}
+			foreach(fut in futList) {
+				await fut?
+				results = Cons(fut.get, results);
+			}
+		}
+		return results;
 }	}	}
 \end{lstlisting}
 
