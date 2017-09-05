@@ -73,7 +73,7 @@ another process of the same actor. It thus blocks the entire actor. Listing~\ref
 %
 %// Classes
 
-\begin{lstlisting}[caption=NQueens in ABS , label=absex]
+\begin{lstlisting}[caption=NQueens without cooperative scheduling , label=absex]
 class Master (Int numWorkers, Int boardSize) implements IMaster {
 	{   // constructor
 		createWorkers(numWorkers);
@@ -102,7 +102,7 @@ class Worker(IMaster master, Int boardSize) implements IWorker {
 \end{lstlisting}
 
 
-\begin{lstlisting}[caption=NQueens in ABS , label=absex]
+\begin{lstlisting}[caption=NQueens  with cooperative scheduling , label=absex]
 class Master (Int numWorkers, Int boardSize) implements IMaster {
 	{   // constructor
 		createWorkers(numWorkers);
