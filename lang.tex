@@ -58,7 +58,10 @@ suspends the executing process which can only be rescheduled if the method
 invocation corresponding to the future \texttt{f} has computed the return value.
 Similarly, a statement of the form \texttt{await b}, where \texttt{b} denotes a boolean expression, suspends the executing process which can only be rescheduled if \texttt{b} evaluates to true. Finally a \texttt{suspend} statement invokes cooperative scheduling without a condition. In all cases the executing process can be suspended and another (enabled) message can be scheduled for execution.
 In contrast, a statement like \texttt{f.get} does not allow the scheduling of
-another process of the same actor. It thus blocks the entire actor. Listing~\ref{absex} gives an excerpt of the ABS model of the NQueens benchmark that uses cooperative scheduling to partial solutions in parallel. It is important to observe the call on line 35 that is followed by an \texttt{await f?}. This allows the master to send computation requests to the workers and then wait for the results. This call suspends the current message execution of the master, but still allows it to precess calls like lines 51 and 56 that come from the workers. In Section~\ref{bench2} we will discuss the performance of this benchmark in comparison with the Akka Actor model implementation.
+another process of the same actor. It thus blocks the entire actor. 
+Listing~\ref{absex} gives an example ABS model comparing cooperative scheduling to pure asynchronous communication as in pure actor model.
+It is important to observe the call by \lstinline{CooperativeMaster} that is followed by an \texttt{await f?}. This allows the master to send computation requests to the workers and then wait for the results. This call suspends the current message execution of the master, but still allows it to process other messages. In contrast, \lstinline{PureMaster} receives the results in another call (\lstinline{success}) enforcing the programmer to divide the logic in two separate methods.
+In Section~\ref{bench2} we will discuss the performance of ABS actors in comparison with the Akka Actor model implementation.
 
 
 %// Interfaces
@@ -73,69 +76,62 @@ another process of the same actor. It thus blocks the entire actor. Listing~\ref
 %
 %// Classes
 
-\begin{lstlisting}[caption=NQueens without cooperative scheduling , label=absex]
-class Master (Int numWorkers, Int boardSize) implements IMaster {
-	{   // constructor
-		createWorkers(numWorkers);
-		this ! sendWorkRoundRobin(...); // start computation
-	}
-	Unit success(Result result) { /* process one result */ }
+\begin{lstlisting}[caption=Cooperative scheduling vs. pure async approach, label=absex]
+class PureMaster (Int numWorkers) implements IMaster {
 	Unit sendWorkRoundRobin(...) {
 		IWorker worker = chooseWorker();
-		worker ! nqueensKernelPar(...);
-}	}
-
-class Worker(IMaster master, Int boardSize) implements IWorker {
-	Unit nqueensKernelPar(List<Int> list, Int depth, Int priority) {
-		Result result;
-		if (...) { 
-    		Int i = 0;
-			while (i < boardSize) {
-				if (boardValid(i, ...)) {
-					master ! sendWorkRoundrobin(...); // start a parallel subtask
-				}
-				i = i+1;
-		}	}
-		else {
-			master ! success(result);
-}	}	}
-\end{lstlisting}
-
-
-\begin{lstlisting}[caption=NQueens  with cooperative scheduling , label=absex]
-class Master (Int numWorkers, Int boardSize) implements IMaster {
-	{   // constructor
-		createWorkers(numWorkers);
-		Future<List<Result>> fut = this ! sendWorkRoundRobin(...); // start computation
-		await f?
-		// process all restuls
+		worker ! work(...);
 	}
-	List<Result> sendWorkRoundRobin(...) {
+	Unit success(Result result) { /* process results */ }
+}
+class CooperativeMaster (Int numWorkers) implements IMaster {
+	Unit sendWorkRoundRobin(...) {
 		IWorker worker = chooseWorker();
-		worker ! nqueensKernelPar(...);
+		Future<Result> fut = worker ! work(...); // start computation
+		await fut?;
+		// process restuls
 }	}
-
-class Worker(IMaster master, Int boardSize) implements IWorker {
-	Result nqueensKernelPar(List<Int> list, Int depth, Int priority) {
-		List<Result> results = Nil;
-		if (...) { 
-			List<Future<List<Result>>> futList = Nil;
-    		Int i = 0;
-			while (i < boardSize) {
-				if (boardValid(i, ...)) {
-					Future<List<Result>> fut = master ! sendWorkRoundrobin(...); // start a parallel subtask
-					futList = Cons(fut, futList);
-				}
-				i = i+1;
-			}
-			foreach(fut in futList) {
-				await fut?
-				results = Cons(fut.get, results);
-			}
-		}
-		return results;
-}	}	}
 \end{lstlisting}
+
+
+%class Worker(IMaster master, Int boardSize) implements IWorker {
+%	Unit nqueensKernelPar(List<Int> list, Int depth, Int priority) {
+%		Result result;
+%		if (...) { 
+%			Int i = 0;
+%			while (i < boardSize) {
+%				if (boardValid(i, ...)) {
+%					master ! sendWorkRoundrobin(...); // start a parallel subtask
+%				}
+%				i = i+1;
+%		}	}
+%		else {
+%			master ! success(result);
+%}	}	}
+
+%\begin{lstlisting}[caption=NQueens  with cooperative scheduling , label=absex]
+%
+%class Worker(IMaster master, Int boardSize) implements IWorker {
+%	Result nqueensKernelPar(List<Int> list, Int depth, Int priority) {
+%		List<Result> results = Nil;
+%		if (...) { 
+%			List<Future<List<Result>>> futList = Nil;
+%    		Int i = 0;
+%			while (i < boardSize) {
+%				if (boardValid(i, ...)) {
+%					Future<List<Result>> fut = master ! sendWorkRoundrobin(...); // start a parallel subtask
+%					futList = Cons(fut, futList);
+%				}
+%				i = i+1;
+%			}
+%			foreach(fut in futList) {
+%				await fut?
+%				results = Cons(fut.get, results);
+%			}
+%		}
+%		return results;
+%}	}	}
+%\end{lstlisting}
 
 
 %The "await" statement of ABS offers a high level mechanism that controls execution within an actor (or, more generally, a COG) based on its internal state or the availability of the result of an asynchronous call via futures. A statement like \lstinline|await future?| differs from "future.get" 
