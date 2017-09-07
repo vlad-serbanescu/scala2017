@@ -89,6 +89,8 @@ Cooperative scheduling through the "await" statements may suspend the current me
 \paragraph{Using JVM Garbage Collection}
 Using the approach explained so far in this section, the only extra references we need for the actors are the ones inside the global hash-table required for the notification mechanism for futures. Once the future is completed and notifications are sent, the key is deleted and the actor references become unreachable. Therefore we can leave the entire garbage collection process to the Java Runtime Environment as no other bookkeeping mechanisms are required. This way we do not keep a registry of the actors like the {\ttfamily context} in Scala and Akka.
 
+\section{Scala API}
 
+Here we should briefly describe how to use the API in Scala, plus the two design patterns for await and get.
 
 
