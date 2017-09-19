@@ -10,9 +10,10 @@
 The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. 
 Actors represent processes that execute in parallel and interact via asynchronous communication of messages. 
 The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling parallel and distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}. Syntactically ABS has a similar structure to Java and Scala languages, offering both functional and object-oriented support.
-In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library that can be directly used from Scala and Java. Our solution uses an underlying thread model implemented in Java to support a very powerful feature of ABS, namely cooperative scheduling. 
+In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library written in Java that can be directly used from Scala and Java to to more to follow more directly and faithfully the programming paradigm of ABS. Our solution uses an underlying thread model implemented in Java to support a very powerful feature of ABS, namely cooperative scheduling. Cooperative scheduling represents the ability of an Actor to suspend its current execution based on a condition, and instead of blocking until this condition is fulfilled, it schedules another message that it contains in its queue.  
 %Together with this model we provide a source-to-source translation from ABS to Scala to 
-We support both the object-oriented and functional programming paradigms of ABS. Most importantly the library has support for a Foreign Language Interface (FLI) that offers ABS as an extension of the Scala language which provides a new concurrency model and corresponding analysis techniques.
+The use of the library in Scala is done to support both the object-oriented and functional programming paradigms of ABS. 
+%Most importantly the library has support for a Foreign Language Interface (FLI) that offers ABS as an extension of the Scala language which provides a new concurrency model and corresponding analysis techniques.
 % e.g., recent developments have focused on the modeling and analysis of Cloud applications~\cite{Albert}. 
 
 
