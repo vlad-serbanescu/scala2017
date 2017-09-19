@@ -7,12 +7,22 @@
 
 %the actor-based model smotthly integrates with scala
 
-The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. 
-Actors represent processes that execute in parallel and interact via asynchronous communication of messages. 
-The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling parallel and distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}. Syntactically ABS has a similar structure to Java and Scala languages, offering both functional and object-oriented support.
-In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library written in Java that can be directly used from Scala and Java to to more to follow more directly and faithfully the programming paradigm of ABS. Our solution uses an underlying thread model implemented in Java to support a very powerful feature of ABS, namely cooperative scheduling. Cooperative scheduling represents the ability of an Actor to suspend its current execution based on a condition, and instead of blocking until this condition is fulfilled, it schedules another message that it contains in its queue.  
+%The Actor-based model of computation~\cite{Agha} is particularly tailored to the description of distributed systems. 
+%Actors represent processes that execute in parallel and interact via asynchronous communication of messages. 
+
+Actor-based models of computation in general assume a run-to-completion mode
+of execution of the messages.
+The Abstract Behavioral Specification (ABS) Language extends the Actor-based model
+with  a high-level synchronization mechanism which allows actors to suspend the
+execution of the current message and schedule in a cooperative manner another
+queued message.  This  extension  is a powerful means for the expression and analysis
+of fine-grained run-time dependencies between messages.
+
+
+%Syntactically ABS has a similar structure to Java and Scala languages, offering both functional and object-oriented support.
+%In this paper, we bring the concepts and advantages of ABS to programming level by implementing a library written in Java that can be directly used from Scala and Java to to more to follow more directly and faithfully the programming paradigm of ABS. Our solution uses an underlying thread model implemented in Java to support a very powerful feature of ABS, namely cooperative scheduling. Cooperative scheduling represents the ability of an Actor to suspend its current execution based on a condition, and instead of blocking until this condition is fulfilled, it schedules another message that it contains in its queue.  
 %Together with this model we provide a source-to-source translation from ABS to Scala to 
-The use of the library in Scala is done to support both the object-oriented and functional programming paradigms of ABS. 
+%The use of the library in Scala is done to support both the object-oriented and functional programming paradigms of ABS. 
 %Most importantly the library has support for a Foreign Language Interface (FLI) that offers ABS as an extension of the Scala language which provides a new concurrency model and corresponding analysis techniques.
 % e.g., recent developments have focused on the modeling and analysis of Cloud applications~\cite{Albert}. 
 
@@ -61,6 +71,9 @@ The Actor model in Scala~\cite{Scala} does provide a suspension mechanism, but i
 %its intricate semantics and 
 degradation of performance.
 It is possible to register a {\em continuation} piece of code to run upon completion of a future, but that may run in a separate thread which however breaks the actor semantics and may cause race conditions inside the actor.
+
+The Abstract Behavioral Specification (ABS)~\cite{abs} Language has been developed for modeling parallel and distributed systems based on the actor model and provides extensive support for formal analysis like functional analysis~\cite{KeY}, resource analysis~\cite{saco} and deadlock analysis~\cite{dead}. 
+
 
 There exist various implementation attempts for cooperative scheduling in ABS. 
 The approach followed in the Java backend of ABS~\cite{abs,Schafer} and in the Erlang backend~\cite{Erlang} is process-oriented in the sense that sending a message is implemented by the generation of a corresponding process. We will compare these backends with our solution in Java which allows to store messages (as objects of type Callable or Runnable) before executing them (data-oriented). Our solution builds on this work and extends it with a compiler with full support for cooperative scheduling in the context of both synchronous and asynchronous calls, functional programming and foreign language interface. 

@@ -168,15 +168,8 @@
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-Actor-based models of computation in general assume a run-to-completion mode
-of execution of the messages.
-The Abstract Behavioral Specification (ABS) Language extends the Actor-based model
-with  a high-level synchronization mechanism which allows actors to suspend the
-execution of the current message and schedule in a cooperative manner another
-queued message.  This  extension  is a powerful means for the expression and analysis
-of fine-grained run-time dependencies between messages.
-In this paper we introduce  and evaluate a new library in Scala for  the use of ABS as a full-fledged programming language.
-The main challenge is the development of an efficient and scalable implementation of cooperative scheduling.
+In this paper we introduce  and evaluate a new actor-based library in Scala with a scalable implementation of cooperative scheduling of messages within an actor.
+This allows for multiple entry points for suspending and resuming execution while processing a message.
 By means of a typical benchmark we evaluate our proposed solution and compare it
 to other thread-based implementations of cooperative scheduling.
 \end{abstract}
