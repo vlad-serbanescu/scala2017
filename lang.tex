@@ -1,6 +1,6 @@
 
 
-\section{ABS Language Concepts}
+\section{Cooperative Scheduling in ABS}
 \label{lang}
 %Our reference modeling language for analyzing cooperative scheduling is ABS \cite{abs}, an actor-based modeling language whose semantics offers high-level synchronization mechanisms for parallel and distributed applications. This is a very powerful modeling language with extensive support for concurrent programming \cite{cog}, resource analysis \cite{saco}, deadlock analysis \cite{dead} and remote communication \cite{dis,cloud}. ABS provides high-level constructs for modeling asynchronous communication between actors using messages and cooperative scheduling of these messages by an actor.
 %Mahdi:
@@ -10,28 +10,28 @@ In this section we informally describe the main features of the flow of control
 underlying the semantics of cooperative scheduling in the ABS language.
 For a detailed description of the syntax of the ABS language we refer to~\cite{abs}.
 
-
-%await on booleans
-\subsection{Actors and Method Invocations}\label{amc}
-In ABS the concept of an Actor is an object with its own queue and thread of execution.
-Abstracting from the syntax of the actual parameters,
-in ABS an asynchronous invocation of a method \texttt{m} of an actor \texttt{a} is described by a statement
-\texttt{Future f=a!m()}, where f is a future used to store the return value
-(assuming that m contains a return statement).
-In our backend this invocation will be stored in a queue of the called actor a.
-Futures can be passed around as references and provide a get operation
-described by \texttt{f.get} which results in the value returned and blocks
-the current actor if the corresponding method invocation has not yet computed
-the return value.
-
-Again, abstracting from the syntax of the actual parameters,
-ABS features synchronous method calls described in the standard manner
-by statements of the form \texttt{ x=a.m() or x=this.m()} (also assuming here that the method m returns a value). In case of a call to a different actor \texttt{a} the semantics of such a synchronous call can be translated
-by \texttt{Future f=a!m(); x= f.get}, for some future f (of the appropriate type). In case the actor calls its own defined method \texttt{m} the translation depends on whether cooperative scheduling may be encountered and the implementation in our Java backend relies on a specific scheduling policy which preserves the synchronous call stack.
-%In case the called actor \texttt{a }and the caller belong to the same COG such a synchronous call can be translated by \texttt{Future f=a!m( ); x= f.get;resume},
-%where the auxiliary statement \texttt{resume} (as introduced in~\cite{resume})
-
-
+%
+%%await on booleans
+%\subsection{Actors and Method Invocations}\label{amc}
+%In ABS the concept of an Actor is an object with its own queue and thread of execution.
+%Abstracting from the syntax of the actual parameters,
+%in ABS an asynchronous invocation of a method \texttt{m} of an actor \texttt{a} is described by a statement
+%\texttt{Future f=a!m()}, where f is a future used to store the return value
+%(assuming that m contains a return statement).
+%In our backend this invocation will be stored in a queue of the called actor a.
+%Futures can be passed around as references and provide a get operation
+%described by \texttt{f.get} which results in the value returned and blocks
+%the current actor if the corresponding method invocation has not yet computed
+%the return value.
+%
+%Again, abstracting from the syntax of the actual parameters,
+%ABS features synchronous method calls described in the standard manner
+%by statements of the form \texttt{ x=a.m() or x=this.m()} (also assuming here that the method m returns a value). In case of a call to a different actor \texttt{a} the semantics of such a synchronous call can be translated
+%by \texttt{Future f=a!m(); x= f.get}, for some future f (of the appropriate type). In case the actor calls its own defined method \texttt{m} the translation depends on whether cooperative scheduling may be encountered and the implementation in our Java backend relies on a specific scheduling policy which preserves the synchronous call stack.
+%%In case the called actor \texttt{a }and the caller belong to the same COG such a synchronous call can be translated by \texttt{Future f=a!m( ); x= f.get;resume},
+%%where the auxiliary statement \texttt{resume} (as introduced in~\cite{resume})
+%
+%
 
 
 
@@ -52,7 +52,7 @@ by \texttt{Future f=a!m(); x= f.get}, for some future f (of the appropriate type
 %This is a constraint that our implementation needs to take into account and a synchronization mechanism as will be described in our modeled application later in this section $\leftarrow$ {\bfseries do we? make sure it is not overemphasized here.}. 
 
 
-\subsection{Await Construct}
+%\subsection{Await Construct}
 In ABS a statement of the form \texttt{await f?}
 suspends the executing process which can only be rescheduled if the method
 invocation corresponding to the future \texttt{f} has computed the return value.
