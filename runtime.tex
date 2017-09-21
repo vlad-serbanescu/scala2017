@@ -96,20 +96,7 @@ Actors that complete a certain future can call the static method \lstinline|rele
 \paragraph{Using JVM Garbage Collection}
 Using the approach explained so far in this section, the only extra references we need for the actors are the ones inside the global hash-table required for the notification mechanism for futures. Once the future is completed and notifications are sent, the key is deleted and the actor references become unreachable. Therefore we can leave the entire garbage collection process to the Java Runtime Environment as no other bookkeeping mechanisms are required. This way we do not keep a registry of the actors like the {\ttfamily context} in Scala and Akka.
 
-\section{Scala API}
 
-\newcommand{\future}{\lstinline{Future}}
-
-{\bf Here we should briefly describe how to use the API in Scala, plus the two design patterns for await and get.}
-
-Since the core of ABS actors is written in Java it can be used in both Scala and Java, but due to the native functional approach in Scala, we describe the examples in Scala.
-Defining an actor is simply done by extending the \lstinline{LocalActor} class. Thus by instantiating an instance of such actor classes, automatically the object will have the message queue and conceptually one thread of execution. Messages an actor can receive must return a \future. 
-
-One can send messages to actors as shown in line xx of example yy.
-
-An actor can spawn internal tasks and give them enabling conditions. These tasks are put in the queue like normal messages but are scheduled only if their enabling condition is ture.
-
-One restriction in our API is that reading the value of a future is not made available directly because it can lead to deadlocks and performance degradation. Instead one can spawn a continuation that will be executed whenever the future is ready and it takes the value inside the future as a paremeter.
 
 
 

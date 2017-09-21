@@ -1,0 +1,90 @@
+\section{Scala API}
+\label{scalaapi}
+
+\newcommand{\future}{\lstinline{Future}}
+\newcommand{\send}{\lstinline{send}}
+\newcommand{\spawn}{\lstinline{spawn}}
+\newcommand{\gspawn}{\lstinline{getSpawn}}
+
+
+{\bf Here we should briefly describe how to use the API in Scala, plus the two design patterns for await and get.}
+
+Since the core of ABS actors is written in Java it can be used in both Scala and Java, but due to the native functional approach in Scala, we describe the examples in Scala.
+Defining an actor is simply done by extending the \lstinline{LocalActor} class. Thus by instantiating an instance of such actor classes, automatically the object will have the message queue and conceptually one thread of execution. The actor's reference can then be used and passed in between objects and actors normally. It can then receive messages asynchronously and react to them.  
+The Actor API provides three methods for asynchronous communication and concurrency control.
+
+\paragraph{Sending Asynchronous messages}
+ The \send  method has the following signature:
+\begin{lstlisting}
+<V> ABSFuture<V> send(Callable<ABSFuture<V>> message);
+\end{lstlisting}
+Messages an actor can receive must return a \future. The method take a \textit{message} parameter that specifies the task to be run asynchronously by the actor. An important observation to make here is that we cannot enforce the \textit{message} to be a method provided by one of the interfaces that the actor extends, although it is recommended to only use methods exposed by these interfaces. What we can enforce though is that all messages that are sent to actor must return a result of type \future such that we can use the design pattern described below. 
+One can send messages to actors as shown in line xx of example yy.
+
+\paragraph{Spawning an internal task}
+The \spawn ~method has the following signature:
+
+\begin{lstlisting}
+<V> ABSFuture<V> spawn(Guard guard, Callable<ABSFuture<V>> message);
+\end{lstlisting}
+
+This method of the API together with the run-time system presented in Section~\ref{run} is used to emulate the \textit{await} semantics and cooperative scheduling. 
+
+\paragraph{Blocking an Actor}
+The \gspawn ~method has the following signature:
+
+\begin{lstlisting}
+<T,V> ABSFuture<T> getSpawn(ABSFuture<V> f, CallableGet<T, V> message);
+\end{lstlisting}
+
+This method has the same behavior as \spawn but may only be used together with a future Guard (ABSFuture) and also propagates the value of this future (inside CallableGet) to the \textit{spawned} task once it is ready.  
+
+%\textit{Spawn} method (guard, Method). Scheduling of the method will occur when the guard is true. Continues with the rest of the code that follows \textit{Spawn}. Returns a future.
+%What is the guard (any java/scala boolean expression or is a future.) Explain the syntax of writing the different types of guards. 
+%
+%
+%An actor can spawn internal tasks and give them enabling conditions. These tasks are put in the queue like normal messages but are scheduled only if their enabling condition is ture.
+%
+%One restriction in our API is that reading the value of a future is not made available directly because it can lead to deadlocks and performance degradation. Instead one can spawn a continuation that will be executed whenever the future is ready and it takes the value inside the future as a parameter.
+%
+%\paragraph{Actor layout}
+%A class that extends \textit{LocalActor}. Every method that returns a Future, can be called asynchronously from outside. Methods that do not return futures cannot be sent as a message to the actor, must not be called from outside (this cannot be enforced). All of the methods that return a Future can be called both synchronously and asynchronously.
+%The interface that defines the messages that can be called from outside the actor .
+%%(ABS interface equivalent) 
+%%Interfaces extend the \textit{Actor} interface and reasonable usage would be to have only methods that return a future. 
+%%A class that extends \textit{RemoteActor}. 
+%
+%\paragraph{Actor Instantiation}
+%An actor is instantiated normally like a Java Object with its initial state passed in the constructor. This implicitly creates an actor object with an empty message queue, although it does not create a thread until the queue receives its first message to execute. The actor's reference can then be used and passed in between objects and actors normally such that it can receive messages asynchronously and react to them. In this manner we avoid the use of initializing an explicit actor context or maintaining a registry or actors. The references will be garbage collected by the JVM like normal objects once they become unreachable.
+%
+%\paragraph{Sending Asynchronous messages}
+%The Actor API provides a \textit{send} method with the following signatures:
+%\begin{lstlisting}
+%public <V> Future<V> send(Callable<Future<V>> message);
+%\end{lstlisting}
+%Both methods take a \textit{message} parameter that specifies the task to be run asynchronously by the actor. An important observation to make here is that we cannot enforce the \textit{message} to be a method provided by one of the interfaces that the actor extends, although it is recommended to only use methods exposed by these interfaces. What we can enforce though is that all messages that are sent to actor must return a result of type Future such that we can use the design pattern described in Section\ref{coop:dp} In future work we plan to extend the library to statically type-check the message submitted via the \textit{send} method in order to prevent the user from running unwanted code on the actors. 
+%
+%
+%
+%\paragraph{Working with futures}
+%Future reference can be passed between actors. Reading the future value using \textit{f.get\_spawn(CONTINUATION, strictness)}. CONTINUATION takes as a parameter the value of the future. CONTINUATION will run as a normal message on the actor. Will not break the actor encapsulation and avoid race conditions. The \textit{strictness} will determine if the actor will continue to run lower priority messages or block.  
+%Cannot directly read the value of a future to avoid blocking the whole thread if the value is not available.
+%
+%
+%
+%
+%
+%\section{Design Patterns}
+%\ref{coop:dp}
+%\paragraph{ABS Await Pattern}
+%The \textit{spawn} method of the API together with the run-time system presented in Chapter~\ref{ch:runtime} is used to emulate the \textit{await} smenatics and cooperative scheduling. 
+%
+%
+%\paragraph{ABS Get Pattern}
+%The \textit{get\_spawn} method has the same behavior but may only be used together with a future Guard and also propagates the value of this future to the \textit{spawned} task once it is ready.  
+%
+%\paragraph{ABS Synchronous Call Pattern}
+%To emulate a synchronous call chain that may result from a sequence of synchronous calls followed by an \textit{await}, it suffices to use the same pattern as the \textit{ABS Await Pattern} but instead of calling the function \textit{spawn} on the continuation, we use textit{get\_spawn} instead. 
+%
+%
+%\section{Usage example}
