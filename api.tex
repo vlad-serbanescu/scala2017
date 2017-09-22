@@ -39,6 +39,8 @@ The \gspawn ~method has the following signature:
 
 This method has the same behavior as \spawn but may only be used together with a future Guard (ABSFuture) and also propagates the value of this future (inside CallableGet) to the \textit{spawned} task once it is ready.  
 
+This is a method on the actor and not on the future (in contrast to for example Scala where onComplete and similar methods are on futures) because this spawns a task inside the actor rather than an independent thread. Therefore, it is safe to use in the context of actors.
+
 %\textit{Spawn} method (guard, Method). Scheduling of the method will occur when the guard is true. Continues with the rest of the code that follows \textit{Spawn}. Returns a future.
 %What is the guard (any java/scala boolean expression or is a future.) Explain the syntax of writing the different types of guards. 
 %
