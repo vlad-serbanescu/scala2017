@@ -21,25 +21,50 @@ The Actor API provides three methods for asynchronous communication and concurre
 Messages an actor can receive must return a \future. The method take a \textit{message} parameter that specifies the task to be run asynchronously by the actor. An important observation to make here is that we cannot enforce the \textit{message} to be a method provided by one of the interfaces that the actor extends, although it is recommended to only use methods exposed by these interfaces. What we can enforce though is that all messages that are sent to actor must return a result of type \future such that we can use the design pattern described below. 
 One can send messages to actors as shown in line xx of example yy.
 
+
+
 \paragraph{Spawning an internal task}
-The \spawn ~method has the following signature:
+To implement cooperative scheduling our library provides abstractions for guards that control suspension and release points. The are supported through the abstract class \textbf{Guard} and its subclasses \textbf{FutureGuard}, \textbf{PureExpressionGuard} and \textbf{ConjunctionGuard} that describe the conditions on which an actor's message can await: either a future, a particular valid expression or a group of these conditions respectively. The \spawn ~method has the following signature:
 
 \begin{lstlisting}
 <V> ABSFuture<V> spawn(Guard guard, Callable<ABSFuture<V>> message);
 \end{lstlisting}
 
-This method of the API together with the run-time system presented in Section~\ref{run} is used to emulate the \textit{await} semantics and cooperative scheduling. 
+This method of the API together with the run-time system presented in Section~\ref{run} is used to emulate the \textit{await} semantics and cooperative scheduling. The method takes as parameters an enabling condition (guard) and task to run (message) once the guard is satisfied. The method returns a \future which is the return type of the message to be executed. 
+
+\paragraph{Design Pattern for ABS Await semantics}
+The \textit{spawn} method of the API together with the run-time system presented in Chapter~\ref{ch:runtime} is used to emulate the \textit{await} semantics and cooperative scheduling. A simple example is shown in listing \ref{awaitdp}. 
+
+\begin{lstlisting}[label=awaitdp]
+//TODO add an example for await with spawn here
+\end{lstlisting}
+
+The pattern is very simple, it works as a normal call to \spawn if the condition is not satisfied, while the continuation that follows await is ran directly if the condition is satisfied straight away.
+
 
 \paragraph{Blocking an Actor}
 The \gspawn ~method has the following signature:
 
 \begin{lstlisting}
 <T,V> ABSFuture<T> getSpawn(ABSFuture<V> f, CallableGet<T, V> message);
+<T,V> ABSFuture<T> getSpawn(ABSFuture<V> f, CallableGet<T, V> message, 
+													int priority, boolean strict);
 \end{lstlisting}
 
-This method has the same behavior as \spawn but may only be used together with a future Guard (ABSFuture) and also propagates the value of this future (inside CallableGet) to the \textit{spawned} task once it is ready.  
+This method has a similar behaviour \spawn but may only be used together with a future Guard (ABSFuture) and also propagates the value of this future (inside CallableGet) to the \textit{spawned} task once it is ready. This method must be used to read a future as reading it directly will cause the blocking of the whole thread if the value is not available.  Future references can be passed between actors. Reading the future value using \gspawn, allows the actor to run other tasks to be run in case the future is not completed without forcing the actor to block. Once the future is ready, the \textit{message} parameter will contain the value of this future together with the task that is to be run. This limits the numbers of threads that live in the system, but are blocked, without breaking the actor encapsulation. If we want messages and continuations to execute in a particular order (such as preserving a synchronous call stack) we can set a higher or lower \textit{priority} for a message. This is shown in an example in Listing\ref{TODO}. Furthermore, there may the case when we would like the actor to block and therefore the setting the boolean parameter \textit{strict} will determine if the actor will block.  
 
-This is a method on the actor and not on the future (in contrast to for example Scala where onComplete and similar methods are on futures) because this spawns a task inside the actor rather than an independent thread. Therefore, it is safe to use in the context of actors.
+\paragraph{Design Pattern for ABS Get semantics}
+The example in Listing \ref{getp} shows the pattern to write the ABS Get semantics using \gspawn. The pattern is the same as await, only it uses \gspawn with the s\textit{strict} flag set to true to enforce blocking behaviour.
+\begin{lstlisting}[label=getdp]
+//TODO add an example for get with getSpawn here
+\end{lstlisting}
+
+\paragraph{Design Pattern for preserving a synchronous call stack}
+The example in Listing \ref{sync} shows the pattern to execute a chain of synchronous calls correctly using \gspawn. To do this, we call the method synchronously as normal, but if its returned \future is not ready, we read it using \gspawn but give the continuation \textit{message} a higher priority such that it will execute first when the future is ready.
+\begin{lstlisting}[label=syncdp]
+//TODO add an example for get with synccalls here
+\end{lstlisting}
+
 
 %\textit{Spawn} method (guard, Method). Scheduling of the method will occur when the guard is true. Continues with the rest of the code that follows \textit{Spawn}. Returns a future.
 %What is the guard (any java/scala boolean expression or is a future.) Explain the syntax of writing the different types of guards. 
@@ -71,7 +96,7 @@ This is a method on the actor and not on the future (in contrast to for example 
 %\paragraph{Working with futures}
 %Future reference can be passed between actors. Reading the future value using \textit{f.get\_spawn(CONTINUATION, strictness)}. CONTINUATION takes as a parameter the value of the future. CONTINUATION will run as a normal message on the actor. Will not break the actor encapsulation and avoid race conditions. The \textit{strictness} will determine if the actor will continue to run lower priority messages or block.  
 %Cannot directly read the value of a future to avoid blocking the whole thread if the value is not available.
-%
+
 %
 %
 %
