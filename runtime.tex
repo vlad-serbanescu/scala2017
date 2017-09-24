@@ -1,7 +1,6 @@
 \section{Implementation}
 \label{run}
-The implementation of the full data-oriented scheme is done through a library which contains a set of classes and interfaces that have a direct mapping to the ABS language concepts described in Section~\ref{lang}. The library provides an implementation of cooperative scheduling behavior, the suspension and release mechanisms while respecting the logic of synchronous calls. The library provides the solution and the optimizations discussed in Section~\ref{scheme}. The library can be obtained as a maven project and is available online~\footnote{https://github.com/vlad-serbanescu/abs-api-cwi.git (Local Actor branch)} with the compiler ~\footnote{https://github.com/CrispOSS/jabsc  (Scala Writer branch)}.
-
+The implementation of the full data-oriented scheme is done through a library which contains a set of classes and interfaces that have a direct mapping to the ABS language concepts described in Section~\ref{lang}. The library provides an implementation of cooperative scheduling behavior, the suspension and release mechanisms while respecting the logic of synchronous calls. The library provides the solution and the optimizations discussed in Section~\ref{sec:scheme}. The library can be obtained as a maven project and is available online~\footnote{https://github.com/vlad-serbanescu/abs-api-cwi.git (get-spawn branch)} .
 
 
 %A problem that can arise when there are more actors than available threads in the system's executor, some actors may keep processing one message after the other from its queue, and thus keeping the thread it is running on, while some other actors are starving, i.e., not being assigned to any thread.

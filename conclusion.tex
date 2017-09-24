@@ -2,21 +2,20 @@
 \label{conc}
 %future work type checking
 %mention debugging
-In this paper we proposed a Scala library for efficiently implementing the cooperative scheduling behavior of ABS which provides a powerful programming abstraction. 
-To provide support for the functional data types required by ABS we embedded the Java run-time system into the Scala programming language. 
-We provided a benchmark tailored towards cooperative scheduling that show significant improvements of saving continuations including the call stack as data in memory instead of using a process-oriented approach by means native Java threads. 
-We used a second benchmark for a CPU-intensive application to show that this feature does have a negative impact on performance compared to the Akka Actor library.
+In this paper we proposed a Java library for efficiently implementing the cooperative scheduling behavior of ABS which provides a powerful programming abstraction. 
+To provide support for the functional data types required by ABS we embedded the Java run-time system into the Scala programming language. We showed hoe the library can be used as a design pattern to support ABS semantics. Furthermore having a portable JVM library gives us a basis for industrial adoption of the ABS language and provides ABS as a powerful extension of Scala with support for formal verification, resource analysis and deadlock detection as well as extensions that support real-time programming ~\cite{rabs}, in a software development context.
 
-\par Furthermore having a portable JVM library gives us a basis for industrial adoption of the ABS language and provides ABS as a powerful extension of Scala with support for formal verification, resource analysis and deadlock detection as well as extensions that support real-time programming ~\cite{rabs}, in a software development context. In particular the ABS extension of Scala provide can be integrated with the distributed ABS implementation that exists in the Haskell backend \cite{cloud} to provide a distributed programming model for Actor-based applications.
+%We provided a benchmark tailored towards cooperative scheduling that show significant improvements of saving continuations including the call stack as data in memory instead of using a process-oriented approach by means native Java threads. We used a second benchmark for a CPU-intensive application to show that this feature does have a negative impact on performance compared to the Akka Actor library.
 
-In future work we plan to extend the library to statically type-check the message submitted via the \textit{send} method in order to prevent the user from running unwanted code on the actors. 
-static type checking with respect to actor interfaces
+\par For future work, the ABS extension of Scala provide can be integrated with the distributed ABS implementation that exists in the Haskell backend \cite{cloud} to provide a distributed programming model for Actor-based applications.We also plan to extend the library to statically type-check the message submitted via the \textit{send} method in order to prevent the user from running unwanted code on the actors. To this end we plan to provide a syntactic sugar for an asynchronous invocation that can be used directly to send a message to an Actor.
 
-syntactic sugar 
 
-await the proper way
+%static type checking with respect to actor interfaces. 
+%syntactic sugar 
 
-distributed actors
+%await the proper way
+
+%distributed actors
 
 %\par For future work we plan to extend the ABS typechecker to verify the Foreign Language Interface constructs directly in ABS. We also plan to develop a debugger to enable profiling and visualization of concurrent programs written in ABS. 
 
