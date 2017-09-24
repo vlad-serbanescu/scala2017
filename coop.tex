@@ -3,57 +3,64 @@
 %-sequence diagram of what happens in an actor during synchronous and asynchronous method calls.
 
 %\subsection{}
-In this section we present how the Scala language is used as a backend for ABS and investigate the evolution of the scheme used to implement cooperative scheduling in the Java Runtime environment. We start  from a very trivial approach to using several libraries and features that the latest version of Java SDK provides. The first feature we will use is the Executor interface that facilitates thread programming. The objects that implement this interface provide a queue of tasks and an efficient way of running those tasks on multiple threads. Throughout this section we will use the terms executor and thread pool interchangeably to refer to this feature. The second notion discussed in our solution was introduced starting with the Java 8 version, and it is the construct for a lambda expression~\footnote{https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html}. This allows us to model a method call as a Runnable or Callable and we will refer to this model as a \textbf{task}. We will look at each solution in terms of four Actor features:
+In this section we present how the Java language is used to provide a library to support a Scala backend for ABS. We first look a a summary of the evolution of the scheme used to implement cooperative scheduling in the Java Runtime environment. We start  from a very trivial approach to using several data structures and Java 8 features that the latest version of SDK provides. The first feature we will use is the Executor interface that facilitates thread programming. The objects that implement this interface provide a queue of tasks and an efficient way of running those tasks on multiple threads. Throughout this section we will use the terms executor and thread pool interchangeably to refer to this feature. The second notion discussed in our solution was introduced starting with the Java 8 version, and it is the construct for a lambda expression~\footnote{https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html}. This allows us to model a method call as a Runnable or Callable and we will refer to this model as a \textbf{task}. When cooperative scheduling occurs, the executing task of an actor will be suspended and therefore still live in the system as a thread so the application's live threads will be equal to the number of "await" statements in the program. 
 
-\begin{itemize}
-	\item Creation of the actor itself;
-	\item Generating asynchronous calls and message passing;
-	\item Releasing control or suspension of a call upon await;
-	\item Saving the call stack of a synchronous call upon releasing control.
-\end{itemize}
+%We will look at each solution in terms of four Actor features:
+%
+%\begin{itemize}
+%	\item Creation of the actor itself;
+%	\item Generating asynchronous calls and message passing;
+%	\item Releasing control or suspension of a call upon await;
+%	\item Saving the call stack of a synchronous call upon releasing control.
+%\end{itemize}
 
+\subsection{Summary of the Implementation Evolution}
+\par The trivial straightforward approach for implementing cooperative scheduling in the library is for an asynchronous call to generate a new native thread with its own stack and context. We would then model each actor as an object with a lock for which threads compete. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the number of live native threads. 
+\par To reduce the number of live threads in an application, we can model each invocation as a task using lambda expressions and organize each actor as a thread pool. This gives the actor an implicit queue to which tasks are submitted. We obtain a small reduction in the number of threads corresponding to the number of tasks that have been submitted, but not started. The number of live threads can be restricted to the number of threads allowed by each Thread Pool, while the rest of the invocations remain in the thread pool queue as tasks.
+\par To avoid unnecessary blocking on the lock, we introduce \textit{one thread pool per system} or \textit{the system's executor}, and instead of submitting the messages directly to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second phase the submission to the thread pool. We assign a separate task for each actor to iterate through its associated queue and submit the next available message to the system thread pool. We will refer to this task from now on as the \textbf{Main Task} of an actor. This removes the requirement to store every message handler as a thread, after it starts and attempts to acquire a lock, saving a task as data in the heap instead.  However it comes at the cost of having to manage message queues manually as we need an explicit queue for all the messages that have not yet been submitted (to the thread pool). 
 
 
 %Conceptually an actor has one thread of execution, which means it can run only one method at a time. Practically, however, allocating a real thread for each actor is highly expensive, as we can have a very large number of actors in the modeled application. Very roughly speaking, an executor service in Java provides a queue of tasks and an efficient way of running those tasks on a few threads. Due to the optimizations provided by Java implementations, an executor in principle is the best way to scale to many concurrent tasks. We use the terms executor and thread pool interchangeably, referring to the main interface~\cite{execserv} that facilitate parallel programming in Java. 
 
 %\subsection{Modeling Language Concepts in the JVM}
 
-\subsection{Every asynchronous call is a thread and each actor has a lock}
-The trivial straightforward approach for implementing cooperative scheduling in the library is for an asynchronous call to generate a new native thread with its own stack and context. We would then model each actor as an object with a lock for which threads compete. The disadvantage here is that this lock-per-actor must be checked by every message handler upon start, and freed upon completion. Whenever an await statement occurs the thread would be suspended by the JVM's normal behavior. When the release condition is enabled, a suspended thread would become available and in turn compete with the other threads in order to execute on the actor. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the number of live native threads. Figure~\ref{tp} provides an illustration of this base \textit{process-oriented} approach. Here the idea is that the threads in the circle belong to one actor, thus sharing a lock(the green thread holds the lock, while the red ones are waiting to acquire it). The four Actor features are implemented as follows:
+%\subsection{Every asynchronous call is a thread and each actor has a lock}
+%
+%The trivial straightforward approach for implementing cooperative scheduling in the library is for an asynchronous call to generate a new native thread with its own stack and context. We would then model each actor as an object with a lock for which threads compete. The disadvantage here is that this lock-per-actor must be checked by every message handler upon start, and freed upon completion. Whenever an await statement occurs the thread would be suspended by the JVM's normal behavior. When the release condition is enabled, a suspended thread would become available and in turn compete with the other threads in order to execute on the actor. The main drawback of this approach is the large number of threads that are created, which restricts any application from having more method calls than the number of live native threads. Figure~\ref{tp} provides an illustration of this base \textit{process-oriented} approach. Here the idea is that the threads in the circle belong to one actor, thus sharing a lock(the green thread holds the lock, while the red ones are waiting to acquire it). The four Actor features are implemented as follows:
 
-\begin{itemize}
-	\item The actor is initialized as an object with a lock;
-	\item Asynchronous calls are created as new threads that compete for the lock
-	\item Suspension of a call  suspends the thread;
-	\item The call stack of a synchronous call is saved in the suspended thread.
-\end{itemize}
-
-
-\begin{figure}
-	\centering
-	\begin{minipage}{.47\textwidth}
-		\centering
-		\includegraphics[scale=0.4]{mt.png}
-		\caption{Basic process-oriented approach}
-		\label{tp}
-	\end{minipage}
-	\begin{minipage}{.52\textwidth}
-		\centering
-		\includegraphics[scale=0.45]{atp.png}
-		\caption{Actor-as-executor approach}
-		\label{atp}	
-	\end{minipage}
-\end{figure}
-
-\subsection{Every actor is a thread pool.}
-To reduce the number of live threads in an application, we can model each invocation as a task using lambda expressions and organize each actor as a thread pool. This gives the actor an implicit queue to which tasks are submitted. We obtain a small reduction in the number of threads corresponding to the number of tasks that have been submitted, but not started. Once they are started the threads still have to compete for the actor's lock in order to execute, but the number of live threads can be restricted to the number of threads allowed by each Thread Pool, while the rest of the invocations remain in the thread pool queue as tasks. This approach is illustrated in Figure~\ref{atp}. The implementation of the four Actor features is as follows:
-
-\begin{itemize}
-	\item The actor is initialized as an object with a lock and a thread pool;
-	\item Asynchronous calls are created as lambda expressions and assigned new threads that compete for the lock once they start;
-	\item Suspension of a call suspends the thread;
-	\item The call stack of a synchronous call is still saved in the suspended thread.
-\end{itemize}
+%\begin{itemize}
+%	\item The actor is initialized as an object with a lock;
+%	\item Asynchronous calls are created as new threads that compete for the lock
+%	\item Suspension of a call  suspends the thread;
+%	\item The call stack of a synchronous call is saved in the suspended thread.
+%\end{itemize}
+%
+%
+%\begin{figure}
+%	\centering
+%	\begin{minipage}{.47\textwidth}
+%		\centering
+%		\includegraphics[scale=0.4]{mt.png}
+%		\caption{Basic process-oriented approach}
+%		\label{tp}
+%	\end{minipage}
+%	\begin{minipage}{.52\textwidth}
+%		\centering
+%		\includegraphics[scale=0.45]{atp.png}
+%		\caption{Actor-as-executor approach}
+%		\label{atp}	
+%	\end{minipage}
+%\end{figure}
+%
+%\subsection{Every actor is a thread pool.}
+%To reduce the number of live threads in an application, we can model each invocation as a task using lambda expressions and organize each actor as a thread pool. This gives the actor an implicit queue to which tasks are submitted. We obtain a small reduction in the number of threads corresponding to the number of tasks that have been submitted, but not started. Once they are started the threads still have to compete for the actor's lock in order to execute, but the number of live threads can be restricted to the number of threads allowed by each Thread Pool, while the rest of the invocations remain in the thread pool queue as tasks. This approach is illustrated in Figure~\ref{atp}. The implementation of the four Actor features is as follows:
+%
+%\begin{itemize}
+%	\item The actor is initialized as an object with a lock and a thread pool;
+%	\item Asynchronous calls are created as lambda expressions and assigned new threads that compete for the lock once they start;
+%	\item Suspension of a call suspends the thread;
+%	\item The call stack of a synchronous call is still saved in the suspended thread.
+%\end{itemize}
 
 
 
@@ -65,29 +72,29 @@ To reduce the number of live threads in an application, we can model each invoca
 %	\label{atp}	
 %\end{figure}
 
-\subsection{Every system has a thread pool.}
-In the previous two approaches we modeled the concept of an actor being restricted to one task at a time by introducing a lock on which threads compete. However as all invocations are modeled as tasks that don't need a thread before they start, there is no point in starting more than one task only to have it stuck on the actor's lock. Therefore we introduce \textit{one thread pool per system} or \textit{the system's executor}, and instead of submitting the messages directly to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second phase the submission to the thread pool. We assign a separate task for each actor to iterate through its associated queue and submit the next available message to the system thread pool. We will refer to this task from now on as the \textbf{Main Task} of an actor. This removes the requirement to store every message handler as a thread, after it starts and attempts to acquire a lock, saving a task as data in the heap instead.  However it comes at the cost of having to manage message queues manually as we need an explicit queue for all the messages that have not yet been submitted (to the thread pool). 
-\par When cooperative scheduling occurs, the executing task of an actor will be suspended and therefore still live in the system as a thread so the application's live threads will be equal to the number of "await" statements in the program. The system's executor can dynamically adjust the number of available threads to run subsequent available tasks, but the application will then still be limited by the maximum number of suspended threads that can exist in the main memory. Furthermore, we still require a lock to ensure that, upon release, the suspended thread will compete with the Main Task associated to the actor from which it originated. This design is presented in Figure~\ref{stp} and it is important to observe the migration of messages into memory and that the red threads are only tasks that have been suspended by an "await". We observe the following changes in the four actor features:
-
-\begin{itemize}
-	\item The actor is initialized as an object with a lock for threads that will be suspended by \texttt{await}, an explicit queue and an implementation of the \textbf{Main Task};
-	\item Asynchronous calls are created as new tasks that will be run by the \textbf{Main Task} and will compete for the lock only with suspended tasks;
-	\item Suspension of a call restarts the \textbf{Main Task} to iterate the actor's queue and parks the current task as a thread;
-	\item The call stack of a synchronous call is still saved in the suspended thread.
-\end{itemize}
-
-
-
-%We solve the problem by using an indirection, instead of submitting the messages to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second phase the submission to the thread pool.
-
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.45]{stp.png}
-	\caption{System as a thread pool}
-	\label{stp}
-	
-\end{figure}
+%\subsection{Every system has a thread pool.}
+%In the previous two approaches we modeled the concept of an actor being restricted to one task at a time by introducing a lock on which threads compete. However as all invocations are modeled as tasks that don't need a thread before they start, there is no point in starting more than one task only to have it stuck on the actor's lock. Therefore we introduce \textit{one thread pool per system} or \textit{the system's executor}, and instead of submitting the messages directly to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second phase the submission to the thread pool. We assign a separate task for each actor to iterate through its associated queue and submit the next available message to the system thread pool. We will refer to this task from now on as the \textbf{Main Task} of an actor. This removes the requirement to store every message handler as a thread, after it starts and attempts to acquire a lock, saving a task as data in the heap instead.  However it comes at the cost of having to manage message queues manually as we need an explicit queue for all the messages that have not yet been submitted (to the thread pool). 
+%\par When cooperative scheduling occurs, the executing task of an actor will be suspended and therefore still live in the system as a thread so the application's live threads will be equal to the number of "await" statements in the program. The system's executor can dynamically adjust the number of available threads to run subsequent available tasks, but the application will then still be limited by the maximum number of suspended threads that can exist in the main memory. Furthermore, we still require a lock to ensure that, upon release, the suspended thread will compete with the Main Task associated to the actor from which it originated. This design is presented in Figure~\ref{stp} and it is important to observe the migration of messages into memory and that the red threads are only tasks that have been suspended by an "await". We observe the following changes in the four actor features:
+%
+%\begin{itemize}
+%	\item The actor is initialized as an object with a lock for threads that will be suspended by \texttt{await}, an explicit queue and an implementation of the \textbf{Main Task};
+%	\item Asynchronous calls are created as new tasks that will be run by the \textbf{Main Task} and will compete for the lock only with suspended tasks;
+%	\item Suspension of a call restarts the \textbf{Main Task} to iterate the actor's queue and parks the current task as a thread;
+%	\item The call stack of a synchronous call is still saved in the suspended thread.
+%\end{itemize}
+%
+%
+%
+%%We solve the problem by using an indirection, instead of submitting the messages to the thread pool, we add an indirection by storing them into an explicit queue first and introduce as a second phase the submission to the thread pool.
+%
+%
+%\begin{figure}
+%	\centering
+%	\includegraphics[scale=0.45]{stp.png}
+%	\caption{System as a thread pool}
+%	\label{stp}
+%	
+%\end{figure}
 
 \subsection{Fully asynchronous environment.}
 In the absence of synchronous calls, to eliminate the problem of having live threads when cooperative scheduling occurs, we can also use lambda expressions to turn the continuation of an await statement (which is determined by its lexical scope) into an internal method call and pass its current state as parameters to this method. Essentially what we do is allocate memory for the continuation on the heap, instead of holding a stack and context for it. We will benchmark this trade-off between the memory footprint of a native thread and the customized encoding of a thread state in memory. As there are no more suspended threads in the system to compete with the actor's Main Task, we can eliminate the lock per actor. The four features of the Actor are as follows:
