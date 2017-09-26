@@ -89,7 +89,7 @@ class CooperativeMaster (Int numWorkers) implements IMaster {
 		IWorker worker = chooseWorker();
 		Future<Result> fut = worker ! work(...); // start computation
 		await fut?;
-		// process restuls
+		// process results
 }	}
 \end{lstlisting}
 
@@ -109,14 +109,14 @@ class CooperativeMaster (Int numWorkers) implements IMaster {
 %			master ! success(result);
 %}	}	}
 
-%\begin{lstlisting}[caption=NQueens  with cooperative scheduling , label=absex]
+%\begin{lstlisting}[caption=NQueens with cooperative scheduling , label=absex]
 %
 %class Worker(IMaster master, Int boardSize) implements IWorker {
 %	Result nqueensKernelPar(List<Int> list, Int depth, Int priority) {
 %		List<Result> results = Nil;
 %		if (...) { 
 %			List<Future<List<Result>>> futList = Nil;
-%    		Int i = 0;
+%  		Int i = 0;
 %			while (i < boardSize) {
 %				if (boardValid(i, ...)) {
 %					Future<List<Result>> fut = master ! sendWorkRoundrobin(...); // start a parallel subtask

@@ -1,49 +1,76 @@
-\section{Scala API}
+\section{Library API}
 \label{scalaapi}
 
-\newcommand{\future}{\lstinline{Future}}
+\newcommand{\future}{\lstinline{ABSFuture}}
 \newcommand{\send}{\lstinline{send}}
 \newcommand{\spawn}{\lstinline{spawn}}
 \newcommand{\gspawn}{\lstinline{getSpawn}}
 
-
-{\bf Here we should briefly describe how to use the API in Scala, plus the two design patterns for await and get.}
-
-Since the core of ABS actors is written in Java it can be used in both Scala and Java, but due to the native functional approach in Scala, we describe the examples in Scala.
-Defining an actor is simply done by extending the \lstinline{LocalActor} class. Thus by instantiating an instance of such actor classes, automatically the object will have the message queue and conceptually one thread of execution. The actor's reference can then be used and passed in between objects and actors normally. It can then receive messages asynchronously and react to them.  
+The core of ABS actors is written in Java and can be used in both Scala and Java, but due to the native functional approach in Scala, we describe the examples in Scala. The library can be obtained as a maven project and is available online~\footnote{https://github.com/vlad-serbanescu/abs-api-cwi.git (get-spawn branch)}, along with several N-Queens benchmark implementations.
+Defining an actor is simply done by extending the \lstinline{LocalActor} class. Throughout this section we will show the use of the API through the implementation of such an actor (the Master) in the N-Queens benchmark in Listing~\ref{queensex}. Thus by instantiating an instance of such actor classes, automatically the object will have the message queue and conceptually one thread of execution. The actor's reference can then be used and passed in between objects and actors normally. It can then receive messages asynchronously and react to them.  
 The Actor API provides three methods for asynchronous communication and concurrency control.
+
+\begin{lstlisting}[caption= Master Actor Class, label=queensex]
+class Master(var numWorkers : Int,var priorities : Int,
+	var solutionsLimit : Int,var threshold : Int,var size : Int) 
+	extends LocalActor with IMaster {
+	
+	private val workerSeq = for (_ <- 1 to numWorkers) yield {
+		new Worker(this, threshold, size)
+	}
+	
+	private final val workers = Iterator.continually(workerSeq).flatten
+	private val t1 = System.currentTimeMillis()
+	
+	def sendWork(list: Array[Int], depth: Int, priorities: Int): 
+		ABSFuture[List[Array[Int]]] = {
+			val worker = workers.next()
+			worker.send(() => 
+				worker.nqueensKernelPar(list, depth, priorities))
+	}
+	
+	def init: ABSFuture[Void] = {
+		val inArray: Array[Int] = new Array[Int](0)
+		val fut: ABSFuture[List[Array[Int]]] = 
+		this.send(() => this.sendWork(inArray, 0, priorities))
+		getSpawn(fut, (result: List[Array[Int]]) => {
+			println("Found {result.size} solutions")
+			println("-- Program successfully completed! in " 
+				+ (System.currentTimeMillis() - t1))
+			ActorSystem.shutdown()
+			ABSFuture.done()
+		} )
+	}	
+	{
+		this.send(() => this.init)
+}	}
+\end{lstlisting}
+
 
 \paragraph{Sending Asynchronous messages}
  The \send  ~method has the following signature:
 \begin{lstlisting}
 <V> ABSFuture<V> send(Callable<ABSFuture<V>> message);
 \end{lstlisting}
-Messages an actor can receive must return a \future. The method take a \textit{message} parameter that specifies the task to be run asynchronously by the actor. An important observation to make here is that we cannot enforce the \textit{message} to be a method provided by one of the interfaces that the actor extends, although it is recommended to only use methods exposed by these interfaces. What we can enforce though is that all messages that are sent to actor must return a result of type \future such that we can use the design pattern described below. 
-One can send messages to actors as shown in line xx of example yy.
+Messages an actor can receive must return an \future. The method takes a \textit{message} parameter that specifies the task to be run asynchronously by the actor. An important observation to make here is that we cannot enforce the \textit{message} to be a method provided by one of the interfaces that the actor extends, although it is recommended to only use methods exposed by these interfaces. An example of sending an asynchronous message is shown in line 15-16 of Listing~\ref{queensex}
 
+%What we can enforce though is that all messages that are sent to actor must return a result of type \future such that we can use the design pattern described below. 
 
+%One can send messages to actors as shown in line xx of example yy.
 
 \paragraph{Spawning an internal task}
-To implement cooperative scheduling our library provides abstractions for guards that control suspension and release points. The are supported through the abstract class \textbf{Guard} and its subclasses \textbf{FutureGuard}, \textbf{PureExpressionGuard} and \textbf{ConjunctionGuard} that describe the conditions on which an actor's message can await: either a future, a particular valid expression or a group of these conditions respectively. The \spawn ~method has the following signature:
+To implement cooperative scheduling our library provides abstractions for guards that control suspension and release points. The are supported through the abstract class \textit{Guard} and its subclasses \textit{FutureGuard}, \textit{PureExpressionGuard} and \textit{ConjunctionGuard} that describe the conditions on which an actor's message can await: either a future, a particular valid expression or a group of these conditions respectively. The \spawn ~method has the following signature:
 
 \begin{lstlisting}
 <V> ABSFuture<V> spawn(Guard guard, Callable<ABSFuture<V>> message);
 \end{lstlisting}
 
- The method takes as parameters an enabling condition (guard) and task to run (message) once the guard is satisfied. The method returns a \future which is the return type of the message to be executed. 
-
-\paragraph{Design Pattern for ABS Await semantics}
-The \textit{spawn} method of the API together with the run-time system presented in Section~\ref{sec:scheme} is used to emulate the \textit{await} semantics and cooperative scheduling. A simple example is shown in listing ~\ref{awaitdp}. 
-
-\begin{lstlisting}[caption= ABS Await Design Pattern, label=awaitdp]
-//TODO add an example for await with spawn here
-\end{lstlisting}
-
+ The method takes as parameters an enabling condition (guard) and task to run (message) once the guard is satisfied. The method returns a \future which is the return type of the message to be executed. The \textit{spawn} method of the API together with the run-time system presented in Section~\ref{run} is used to emulate the \textit{await} semantics and cooperative scheduling. 
 The pattern is very simple, it works as a normal call to \spawn if the condition is not satisfied, while the continuation that follows await is ran directly if the condition is satisfied straight away.
 
 
 \paragraph{Blocking an Actor}
-The \gspawn ~method has the following signature:
+The \gspawn ~method has the following signatures:
 
 \begin{lstlisting}
 <T,V> ABSFuture<T> getSpawn(ABSFuture<V> f, CallableGet<T, V> message);
@@ -51,19 +78,19 @@ The \gspawn ~method has the following signature:
 													int priority, boolean strict);
 \end{lstlisting}
 
-This method has a similar behaviour \spawn but may only be used together with a future Guard (ABSFuture) and also propagates the value of this future (inside CallableGet) to the \textit{spawned} task once it is ready. This method must be used to read a future as reading it directly will cause the blocking of the whole thread if the value is not available.  Future references can be passed between actors. Reading the future value using \gspawn, allows the actor to run other tasks to be run in case the future is not completed without forcing the actor to block. Once the future is ready, the \textit{message} parameter will contain the value of this future together with the task that is to be run. This limits the numbers of threads that live in the system, but are blocked, without breaking the actor encapsulation. If we want messages and continuations to execute in a particular order (such as preserving a synchronous call stack) we can set a higher or lower \textit{priority} for a message. This is shown in an example in Listing~\ref{TODO}. Furthermore, there may the case when we would like the actor to block and therefore the setting the boolean parameter \textit{strict} will determine if the actor will block.  
+This method has a similar behaviour to \spawn but may only be used together with a \textit{FutureGuard} (converted from \future ~f) and also propagates the value of this future (inside CallableGet) to the \textit{spawned} task once it is ready. This method must be used to read a future as reading it directly will cause the blocking of the whole thread if the value is not available.  Future references can be passed between actors. Reading the future value using \gspawn, allows the actor to run other tasks in case the future is not completed without forcing the actor to block. Once the future is ready, the \textit{message} parameter will contain the value of this future together with the task that is to be run. This limits the numbers of threads that live in the system, yet are blocked, without breaking the actor encapsulation. The usage of \gspawn is shown in an example in line 24-30 of Listing~\ref{queensex}. If we want messages and continuations to execute in a particular order (such as preserving a synchronous call stack) we can set a higher or lower \textit{priority} for a message.  Furthermore, there may the case when we would like the actor to block and therefore the setting the boolean parameter \textit{strict} will determine if the actor will block.  
 
-\paragraph{Design Pattern for ABS Get semantics}
-The example in Listing~\ref{getdp} shows the pattern to write the ABS Get semantics using \gspawn. The pattern is the same as await, only it uses \gspawn with the s\textit{strict} flag set to true to enforce blocking behaviour.
-\begin{lstlisting}[caption= ABS Get Design Pattern, label=getdp]
-//TODO add an example for get with getSpawn here
-\end{lstlisting}
-
-\paragraph{Design Pattern for preserving a synchronous call stack}
-The example in Listing~\ref{syncdp} shows the pattern to execute a chain of synchronous calls correctly using \gspawn. To do this, we call the method synchronously as normal, but if its returned \future is not ready, we read it using \gspawn but give the continuation \textit{message} a higher priority such that it will execute first when the future is ready.
-\begin{lstlisting}[caption= Synchronous Call Design Pattern, label=syncdp]
-//TODO add an example for get with synccalls here
-\end{lstlisting}
+%\paragraph{Design Pattern for ABS Get semantics}
+%The example in Listing~\ref{getdp} shows the pattern to write the ABS Get semantics using \gspawn. The pattern is the same as await, only it uses \gspawn with the s\textit{strict} flag set to true to enforce blocking behaviour.
+%\begin{lstlisting}[caption= ABS Get Design Pattern, label=getdp]
+%//TODO add an example for get with getSpawn here
+%\end{lstlisting}
+%
+%\paragraph{Design Pattern for preserving a synchronous call stack}
+%The example in Listing~\ref{syncdp} shows the pattern to execute a chain of synchronous calls correctly using \gspawn. To do this, we call the method synchronously as normal, but if its returned \future is not ready, we read it using \gspawn but give the continuation \textit{message} a higher priority such that it will execute first when the future is ready.
+%\begin{lstlisting}[caption= Synchronous Call Design Pattern, label=syncdp]
+%//TODO add an example for get with synccalls here
+%\end{lstlisting}
 
 
 %\textit{Spawn} method (guard, Method). Scheduling of the method will occur when the guard is true. Continues with the rest of the code that follows \textit{Spawn}. Returns a future.

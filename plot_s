@@ -15,7 +15,8 @@ set yr [0:150]
 set terminal pdf
 #set xtics offset 0,0.5
 #set xtics ('0' 6, '1' 7, '2' 8, '4' 9, '8' 10, '16' 11)
-set output 'akka8.pdf'
-plot "nqueensAkka" using 1:3:xtic(2) title 'Data-Oriented Approach in Scala' with linespoints lt rgb "red",\
- "nqueensAkka" using 1:4:xtic(2) title 'Benchmark using Akka Actors' with linespoints lt rgb "blue"
+set output 'akkaapi.pdf'
+plot "nqueensAkka" using 1:7:xtic(2) title 'Pure Aysnchronous Communication Approach using the API' with linespoints lt rgb "blue",\
+ "nqueensAkka" using 1:5:xtic(2) title 'Cooperative Scheduling Approach using the API' with linespoints lt rgb "green",\
+ "nqueensAkka" using 1:4:xtic(2) title 'Benchmark using Akka Actors' with linespoints lt rgb "red"
 set output
