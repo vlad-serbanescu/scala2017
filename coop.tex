@@ -115,7 +115,9 @@ In the absence of synchronous calls, to eliminate the problem of having live thr
 
 \paragraph{Synchronous calls context.}
 
-In the presence of synchronous calls, the problem that remains is how to save this call stack without degrading performance? To do this we can try to alter the bytecode to resume execution at runtime from a particular point, but we want our approach to be independent of the runtime and be extensible to other programming languages. Therefore we try to approach the problem differently; if we can turn a continuation, that does not originate from a stack of calls, into a task, is it possible to extend this to synchronous calls as well? We know that this issue arises when methods that contain an "await" statement are called synchronously. When the \texttt{await f?} is encountered, the continuation consists of both the lexical scope of the release statement that is followed by the a complete synchronous call chain that has been generated(i.e. $C(M_1)$ in Figure~\ref{sol}). At compile time, when translating source-to-source from ABS to Scala, we can identify all of these occurrences from the ABS code. We can mark them and transform them into asynchronous calls followed by an "await" statement on the future generated from the call. Now we can use the same approach for translating these continuations into tasks using lambda expressions and thus eliminating any suspended threads in the system. The final model of our solution is presented in Figure~\ref{sol}. 
+In the presence of synchronous calls, the problem that remains is how to save this call stack without degrading performance? To do this we can try to alter the bytecode to resume execution at runtime from a particular point, but we want our approach to be independent of the runtime and be extensible to other programming languages. Therefore we try to approach the problem differently; if we can turn a continuation, that does not originate from a stack of calls, into a task, is it possible to extend this to synchronous calls as well? We know that this issue arises when methods that contain an ``await" statement are called synchronously. When the \texttt{await f?} is encountered, the continuation consists of both the lexical scope of the release statement that is followed by the a complete synchronous call chain that has been generated(i.e. $C(M_1)$ in Figure~\ref{sol}). 
+
+%At compile time, when translating source-to-source from ABS to Scala, we can identify all of these occurrences from the ABS code. We can mark them and transform them into asynchronous calls followed by an "await" statement on the future generated from the call. Now we can use the same approach for translating these continuations into tasks using lambda expressions and thus eliminating any suspended threads in the system. The final model of our solution is presented in Figure~\ref{sol}. 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.45]{solution.png}
@@ -123,7 +125,7 @@ In the presence of synchronous calls, the problem that remains is how to save th
 	\label{sol}
 \end{figure}
 
-\par A fully asynchronous environment means to change a synchronous call \texttt{x = this.m();} into an asynchronous call plus an await like \texttt{f = this!m(); x = await f?;}. There are two constraints here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by using \gspawn ~with the pattern in Listing ~\ref{syncdp}:
+\par A fully asynchronous environment means a synchronous call \texttt{x = this.m();} must return a \future which will then be used to control the rest of the method execution. There are two constraints here. First, we still need to make sure that "m" must be the exact next method that will run. Second, when "m" finishes, the actor scheduler must immediately schedule the method that is waiting for its result. Both can be implemented by using \gspawn ~with the pattern in Listing ~\ref{syncdp}:
 
 \begin{lstlisting}[caption= Synchronous Call Pattern, label=syncdp]
 ABSFuture<Int> f = this.m();
@@ -136,7 +138,7 @@ else{
 	}, this.HIGH_PRIORITY, false );
 }
 \end{lstlisting}
-The HIGH\_PRIORITY parameter allows the continuation to execute first once the \future f completes and preserves the call stack.
+In this manner, ``m" executes normally, and if it does not complete, the HIGH\_PRIORITY parameter of \gspawn ~allows the continuation to execute first once the \future ~f completes and preserves the call stack.
 
 
 
