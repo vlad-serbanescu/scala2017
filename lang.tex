@@ -59,7 +59,7 @@ invocation corresponding to the future \texttt{f} has computed the return value.
 Similarly, a statement of the form \texttt{await b}, where \texttt{b} denotes a boolean expression, suspends the executing process which can only be rescheduled if \texttt{b} evaluates to true. Finally a \texttt{suspend} statement invokes cooperative scheduling without a condition. In all cases the executing process can be suspended and another (enabled) message can be scheduled for execution.
 In contrast, a statement like \texttt{f.get} does not allow the scheduling of
 another process of the same actor. It thus blocks the entire actor. 
-Listing~\ref{absex} gives an example ABS model comparing cooperative scheduling to pure asynchronous communication as in pure actor model.
+Listing~\ref{covssy} gives an example ABS model comparing cooperative scheduling to pure asynchronous communication as in pure actor model.
 It is important to observe the call by \lstinline{CooperativeMaster} that is followed by an \texttt{await f?}. This allows the master to send computation requests to the workers and then wait for the results. This call suspends the current message execution of the master, but still allows it to process other messages. In contrast, \lstinline{PureMaster} receives the results in another call (\lstinline{success}) enforcing the programmer to divide the logic in two separate methods.
 In Section~\ref{bench2} we will discuss the performance of ABS actors in comparison with the Akka Actor model implementation.
 
@@ -76,7 +76,7 @@ In Section~\ref{bench2} we will discuss the performance of ABS actors in compari
 %
 %// Classes
 
-\begin{lstlisting}[caption=Cooperative scheduling vs. pure async approach, label=absex]
+\begin{lstlisting}[caption=Cooperative scheduling vs. pure async approach, label=covssy]
 class PureMaster (Int numWorkers) implements IMaster {
 	Unit sendWorkRoundRobin(...) {
 		IWorker worker = chooseWorker();

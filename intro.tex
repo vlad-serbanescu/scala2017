@@ -30,7 +30,7 @@ of fine-grained run-time dependencies between messages.
 \par In ABS, asynchronous messages are modeled as methods of an actor.
 Sending an asynchronous message will schedule the execution of the corresponding method in the callee, returning immediately a future that, upon completion, will hold the result of the method execution, or in case of errors, the thrown exception.
 This ``programming to interfaces'' paradigm enables static type checking of message passing at compile time.
-This is in contrast to the typical approach in Scala where messages are allowed to have any type and thus are only checked at run-time whether the receiver can handle them.
+This is in contrast to the typical approach of actors in Scala where messages are allowed to have any type and thus are only checked at run-time whether the receiver can handle them.
 
 ABS further extends the Actor-based model with a high-level synchronization mechanism that allows actors to suspend in a cooperative manner the execution of the current message and start another queued message. 
 The continuation of the suspended message, which is automatically put back in the message queue, may also be assigned an enabling condition. Cooperative scheduling is a powerful means for the expression and analysis of fine-grained run-time dependencies between messages.
@@ -49,15 +49,15 @@ is translated into a corresponding lambda expression which is passed and stored 
 an object of type Callable or Runnable (depending on whether it returns a result). We show how this basic feature is integrated in a general Java run-time system for ABS which also caters for synchronous calls that give rise to the suspension of the entire call stack generated from a message.
 
 We describe how we implemented ABS actors and cooperative scheduling using Java thread pools and executor services. 
-As elaborated in Section our benchmark, we took an approach with negligible performance penalties regarding message passing and cooperative scheduling. 
+As elaborated in Section~\ref{bench} our benchmark, we took an approach with negligible performance penalties regarding message passing and cooperative scheduling. 
 We describe step by step how to support up to millions of messages, actors, and suspended continuations.
 
 
 %This feature forms the basis of a run-time system which manages
 %the sending, storage and execution of the messages and their continuations
 %which arise because of the cooperative scheduling.
-We will use the N-Queens problem provided by the Savina benchmark for programming with actors\cite{savina} to evaluate our proposed solution and compare it
-to other thread-based implementations in Java or Erlang(a language that uses lightweight threads) of cooperative scheduling, as well as Akka actor implementation provided by the test suite.
+We will also use the N-Queens problem provided by the Savina benchmark for programming with actors\cite{savina} to evaluate our proposed solution and compare it
+to other thread-based implementations in Java or Erlang(a language that uses lightweight threads) of cooperative scheduling, as well as Akka actor implementation provided by the test suite. 
 
 
 %related work takka.
@@ -66,7 +66,7 @@ to other thread-based implementations in Java or Erlang(a language that uses lig
 In this paper we provide a Java implementation of the ABS language as a full-fledged Actor-based programming language which features cooperative scheduling and fully supports the "programming to interfaces'' paradigm. 
 In contrast, Java libraries for programming actors like Akka~\cite{Akka} mainly provide pure asynchronous message passing which does not support the use of application programming interfaces (API) because, for example, in Akka(Java), a message is only typed as a Java Object, so there is no static typing of messages, nor are they part of the actor interface. A first approach for supporting programming to interfaces was proposed in Takka library~\cite{takka}. 
 Distinguishing features of the ABS comprise of high-level constructs for cooperative scheduling which allow the application of formal methods, e.g.,
-formal analysis of deadlock~\cite{deadlock}.
+formal analysis of deadlocks~\cite{deadlock}.
 The Actor model in Scala~\cite{Scala} does provide a suspension mechanism, but its use is \emph{not} recommended because it actually blocks the whole thread and causes
 %its intricate semantics and 
 degradation of performance.

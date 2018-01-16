@@ -37,18 +37,6 @@
 \providecommand\natexlab[1]{#1}
 \providecommand\showeprint[2][]{arXiv:#2}
 
-\bibitem[\protect\citeauthoryear{Agha}{Agha}{1985}]%
-        {Agha}
-\bibfield{author}{\bibinfo{person}{Gul~A Agha}.}
-  \bibinfo{year}{1985}\natexlab{}.
-\newblock \bibinfo{booktitle}{{\em Actors: A model of concurrent computation in
-  distributed systems.}}
-\newblock \bibinfo{type}{{T}echnical {R}eport}.
-  \bibinfo{institution}{MASSACHUSETTS INST OF TECH CAMBRIDGE ARTIFICIAL
-  INTELLIGENCE LAB}.
-\newblock
-
-
 \bibitem[\protect\citeauthoryear{Albert, Arenas, Flores-Montoya, Genaim,
   G{\'o}mez-Zamalloa, Martin-Martin, Puebla, and Rom{\'a}n-D{\'\i}ez}{Albert
   et~al\mbox{.}}{2014}]%

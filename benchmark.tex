@@ -3,46 +3,62 @@
 
 In this section we want to evaluate Scala library in terms of the impact that the cooperative scheduling feature has on performance. We will first use a benchmark that involves heavy cooperative scheduling to compare the data-oriented approach to the process-oriented approach when translating from ABS to Java. Furthermore we will use a benchmark tailored towards CPU-intensive to evaluate the potential of this Scala library to support ABS as a software-development language. We will compare our solution with both the Erlang backend of ABS which benefits from lightweight threads as well as the Akka Actor library for Scala.
 
+\begin{lstlisting}[caption= Benchmark Example, label=absex]
+trait AInterface extends Actor {
+	def recursive_m( i : Int,  id : Int): ABSFuture[Int];
+}
+
+class A extends LocalActor with AInterface {
+
+	var result: Int = 0;
+	
+	def recursive_m(i: Int, id: Int): ABSFuture[Int] = {
+		if (i > 0) {
+			val f: ABSFuture[Int] = this.recursive_m(i - 1, id);
+			if (f.isDone) {
+				return ABSFuture.of(1);
+			} else {
+				return getSpawn(f, (res: Int) => {
+					return ABSFuture.of(1);
+				}, Actor.HIGH_PRIORITY, false);
+		}	}
+		else {
+			var cf: ABSFuture[Int] = this.send(() => this.compute())
+			return spawn(Guard.convert(cf),()=>{ABSFuture.of(1)})
+	}	}
+	
+	def compute(): ABSFuture[Int] = {
+		this.result = this.result + 1;
+		ABSFuture.of(result);
+}	}
+
+object Main extends LocalActor {
+
+	def main(args: Array[String]): Unit = {
+		var i: Int = 0;
+		val master: AInterface = new A();
+		val futures: util.LinkedList[ABSFuture[Int]] = new util.LinkedList[ABSFuture[Int]]()
+		while (i < 500) {
+			val f: ABSFuture[Int] = master.send(() => master.recursive_m(5, i))
+			futures.add(f);
+			i = i + 1;
+		}
+		while (!futures.isEmpty) {
+			//wait until all actors finish
+}	}	}
+\end{lstlisting}
+
 \subsection{Cooperative Scheduling Benchmark}
 The main problem that we encountered when implementing cooperative scheduling was saving the context of an execution and resuming from that context. To do this in Java using threads and context switches heavily limits the application to the number of native threads that can be created.  To measure the improvement provided by our Java library features using a simple example that creates a recursive stack of synchronous calls.  A sketch of the ABS model is presented in Listing~\ref{absex}.
 \par The model creates an Actor of type "A" and sends a large number of messages to it to execute a method \lstinline|recursive_m(5,i|. This method creates a call chain of size 5 before sending an asynchronous message to itself to execute a basic method \lstinline|compute()| and awaits on its result. Although simple, this example allows us to benchmark the pure overhead that arises from having a runtime system with cooperative scheduling support, both in a data-oriented approach and a process-oriented approach. The results are shown in Figure~\ref{jj}. The performance figures presented are for one actor that is running 500-2500 method invocations. It is important to observe that each invocation generates 2 messages in the actor's queue, so as the number of calls increases the number of messages doubles. The figures show that the trade-off for storing continuations into memory instead of saving them in native threads removes limitations on the application and significantly reduces overhead. 
 
+\begin{figure}
+	\centering
+	\includegraphics[scale=.68]{jaj8.pdf}
+	\caption{Performance figures for pure Cooperative Scheduling}
+	\label{jj}
+\end{figure}
 
-\begin{lstlisting}[caption= Benchmark Example, label=absex]
-interface Ainterface {
-	Int recursive_m(Int i, Int id);
-}
-class A() implements Ainterface{
-	Int result=0;
-	Int recursive_m(Int i, Int id){
-		if (i>0){
-			this.recursive_m(i - 1,id);	
-		}
-		else{
-			Fut<Int> f = this ! compute( );
-			await f ?;
-		}
-		return 1;
-	}
-	Int compute( ){
-		result = result + 1;	//no significant computation
-		return result;
-}	}
-{ // Main block:
-	Int i = 0;	
-	Ainterface master = new A ( );
-	List<Fut<Int>> futures = Nil;	
-	while( i < 500){		
-		Fut<Int> f = master ! recursive_m (5, i);
-		futures = Cons( f, futures );
-		i = i + 1 ;
-	}
-	while ( futures != Nil ){
-		Fut<Int> f1 = head(futures);
-		futures = tail(futures);
-		Int r = f1.get;
-}	}
-\end{lstlisting}
 %In the
 %example we have one actor containing an which receives a large
 %number of messages stored in its queue. This message recursively calls
@@ -116,14 +132,9 @@ class A() implements Ainterface{
 %			var r : Int = f1.get();
 %}	}	}
 %\end{lstlisting}
-\begin{figure}
-	\centering
-	\includegraphics[scale=.68]{jaj8.pdf}
-	\caption{Performance figures for pure Cooperative Scheduling}
-	\label{jj}
-\end{figure}
 
-\subsection{NQueens Benchmark}
+
+\subsection{N-Queens Benchmark}
 \label{bench2}
 \par While our solution is catered towards a widely-used software development language, we would like to also compare with other languages that implement ABS language concepts efficiently using threads and without these limitations. In Section~\ref{run} we listed several optimizations that were inferred from our implementation solution. What we want to do is compare this optimized solution to an ABS backend implemented in Erlang that uses the same process-oriented approach but does not suffer from any limitation of native threads. For this comparison, we use the Savina benchmark for programming with actors~\cite{savina}.  We chose the problem of arranging $N$ queens on a $NxN$ chessboard as it provides a master-slave model that can be implemented using actors.  The benchmark divides the task of finding all the valid solutions to the $N$ queens problem to a fixed number of workers that at each step have to find an intermediary solution of placing a queen $K$ on the board before relaying the message back to the master which then assigns the next job of placing queen $K+1$ to another worker. As the search space becomes smaller, w impose a threshold where the worker has to find the complete solution up to $N$ queens before sending a message back to the master. 
 \par We ran the benchmark with a board size varying from 6 to 12 with a fixed number of 4 workers on a core i5 machine which supports hyper-threading. The results are shown in Figure~\ref{ej}. It is important to observe that as the board size increases, the number of solutions grows from 40 to 2680. The results show that our approach is better once the board size reaches 12 and the number of solutions to be found is 14200. This result also strengthens ABS purpose to provide a programming language for real applications.
@@ -135,7 +146,7 @@ class A() implements Ainterface{
 	\label{ej}
 \end{figure}
 
-\par Furthermore, we would like to observe the performance impact that support for cooperative scheduling adds to an application. This feature is a powerful programming abstraction, but we would like to see the cost of developing a benchmark in comparison to an existing actor implementation like the Akka Actor library. Both the Pure Asynchronous model that uses the API and the Akka implementation both require the expected number of solutions for a particular board size, while the Cooperative Scheduling just has to wait for all the possible solutions to be computed. It is also important to observe that the Scala model for this benchmark is 116 lines of code, while the benchmark written directly using the Akka library is 351 lines of code. This reduction in the code is due cooperative scheduling and the API not requiring a context setup for actors and explicit build-up of messages and subsequent pattern matching on them.  We compared the implementation offered by the Savina benchmark with both our approaches for a board size from 10 to 15 on the same machine as before. The results in Figure\ref{aj} show that the cooperative scheduling feature has very little overhead compared to the Akka Actor library while offering a seamless programming experience. The library currently uses a Fixed Thread Pool for the actors but this data structure can be fine-tuned depending on the application that is run.
+\par Furthermore, we would like to observe the performance impact that support for cooperative scheduling adds to an application. This feature is a powerful programming abstraction, but we would like to see the cost of developing a benchmark in comparison to an existing actor implementation like the Akka Actor library. Both the Pure Asynchronous model that uses the API and the Akka implementation both require the expected number of solutions for a particular board size, while the Cooperative Scheduling just has to wait for all the possible solutions to be computed. It is also important to observe that the Scala model for this benchmark is 116 lines of code, while the benchmark written directly using the Akka library is 351 lines of code. This reduction in the code is due cooperative scheduling and the API not requiring a context setup for actors and explicit build-up of messages and subsequent pattern matching on them.  We compared the implementation offered by the Savina benchmark with both our approaches for a board size from 10 to 15 on the same machine as before. The results in Figure\ref{aj} show that the cooperative scheduling feature has the same performance results compared to the Akka Actor library while offering a seamless programming experience. The library currently uses a Fixed Thread Pool for the actors but this data structure can be fine-tuned depending on the application that is run to improve performance.
 
 \begin{figure}
 \centering
